@@ -75,6 +75,9 @@
     padding: 8px 14px; border-radius: 999px; font: inherit; font-size: .9rem; cursor: pointer;
   }
   .filters button[aria-pressed="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+  .group-h { font-family: "Cormorant Garamond", serif; font-weight: 600; font-size: 1.35rem; margin: 22px 0 10px; display: flex; align-items: baseline; gap: 8px; }
+  .group-h:first-child { margin-top: 0; }
+  .group-h span { font-family: Inter, sans-serif; font-size: .8rem; font-weight: 400; color: var(--muted); }
   .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
   @media (min-width: 600px) { .grid { grid-template-columns: repeat(3, 1fr); } }
   .card {
@@ -179,7 +182,7 @@
       <h2>Pieces I've made</h2>
       <p class="sub">Tap a photo to see it larger. Tap ♡ to add it to your request as inspiration.</p>
       <div class="filters" role="group" aria-label="Filter pieces" id="filters"></div>
-      <div class="grid" id="grid"></div>
+      <div id="grid"></div>
       <div class="liked-bar" id="likedBar" aria-live="polite"></div>
     </section>
 
@@ -313,10 +316,12 @@ const PHOTOS = [
   { f: "pendant-simple",            c: "pendant",  t: "Simple silver disc pendant" },
   { f: "ring-garnet-boxed",         c: "ring",     t: "Garnet ring, twisted wire" },
   { f: "ring-tray",                 c: "ring",     t: "A tray of small stone rings" },
-  { f: "collection",                c: "all",      t: "Pendants & cuffs collection" }
+  { f: "collection",                c: "more",     t: "Pendants & cuffs collection" }
 ];
 
-const FILTERS = [["all","All"],["ring","Rings"],["pendant","Pendants"],["bracelet","Bracelets"],["mala","Malas"]];
+const FILTERS = [["all","All"],["pendant","Pendants"],["bracelet","Bracelets"],["ring","Rings"],["mala","Malas"]];
+// Section order and headings in the "All" view ("more" only appears there)
+const GROUPS = [["pendant","Pendants"],["bracelet","Bracelets"],["ring","Rings"],["mala","Malas"],["more","Collections"]];
 
 /* ============================================================ */
 const $ = s => document.querySelector(s);
@@ -333,14 +338,23 @@ $("#filters").addEventListener("click", e => {
   renderGrid();
 });
 
-function renderGrid() {
-  const list = PHOTOS.map((p,i) => ({...p,i})).filter(p => current === "all" || p.c === current || p.c === "all");
-  $("#grid").innerHTML = list.map(p => `
+function card(p) {
+  return `
     <button type="button" class="card ${liked.has(p.i)?'liked':''}" data-i="${p.i}" aria-label="${p.t}">
       <img src="images/${p.f}.jpg" alt="${p.t}" loading="lazy" decoding="async">
       <span class="heart" data-heart aria-hidden="true">${liked.has(p.i)?'♥':'♡'}</span>
       <span class="cap">${p.t}</span>
-    </button>`).join("");
+    </button>`;
+}
+function renderGrid() {
+  const all = PHOTOS.map((p,i) => ({...p,i}));
+  const groups = current === "all" ? GROUPS : GROUPS.filter(([k]) => k === current);
+  $("#grid").innerHTML = groups.map(([k, label]) => {
+    const items = all.filter(p => p.c === k);
+    if (!items.length) return "";
+    const head = current === "all" ? `<h3 class="group-h">${label} <span>${items.length}</span></h3>` : "";
+    return `${head}<div class="grid">${items.map(card).join("")}</div>`;
+  }).join("");
 }
 $("#grid").addEventListener("click", e => {
   const card = e.target.closest(".card"); if (!card) return;
