@@ -53,8 +53,8 @@
   img { max-width: 100%; display: block; }
   .wrap { max-width: 760px; margin: 0 auto; padding: 0 16px; }
 
-  header { padding: 40px 0 8px; text-align: center; }
-  .brand { font-family: "Cormorant Garamond", serif; font-weight: 600; font-size: 2.3rem; line-height: 1.1; margin: 0; letter-spacing: .01em; }
+  header { padding: 32px 0 16px; text-align: center; }
+  .brand { font-family: "Cormorant Garamond", serif; font-weight: 600; font-size: clamp(1.9rem, 8vw, 2.4rem); line-height: 1.1; margin: 0; letter-spacing: .01em; }
   .tag { color: var(--muted); margin: 8px 0 0; }
   .tag a { color: var(--accent); text-decoration: none; font-weight: 500; }
 
@@ -62,10 +62,41 @@
   .sub { color: var(--muted); margin: 0 0 16px; font-size: .95rem; }
   section { padding: 28px 0 8px; }
 
-  /* Steps */
-  .steps { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin: 20px 0 0; padding: 0; list-style: none; font-size: .85rem; color: var(--muted); }
-  .steps li { background: var(--surface); border: 1px solid var(--line); border-radius: 999px; padding: 6px 12px; }
-  .steps b { color: var(--accent); }
+  /* Tabs */
+  .tabbar {
+    position: sticky; top: 0; z-index: 10; background: var(--bg);
+    padding: 10px 0; border-bottom: 1px solid var(--line);
+  }
+  .tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; padding: 4px; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; }
+  .tabs button {
+    font: inherit; font-weight: 600; font-size: 1rem; border: 0; border-radius: 10px; padding: 11px 8px;
+    background: transparent; color: var(--muted); cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;
+  }
+  .tabs button[aria-selected="true"] { background: var(--accent); color: var(--accent-ink); }
+  .badge { min-width: 22px; height: 22px; padding: 0 6px; border-radius: 999px; font-size: .78rem; display: none; place-items: center; background: var(--accent-soft); color: var(--accent); }
+  .badge.show { display: inline-grid; }
+  .tabs button[aria-selected="true"] .badge { background: var(--accent-ink); color: var(--accent); }
+  [role=tabpanel][hidden] { display: none; }
+
+  /* Saved inspiration on the Intake tab */
+  .insp { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 4px; }
+  .insp figure { margin: 0; flex: none; width: 92px; position: relative; }
+  .insp img { width: 92px; height: 116px; object-fit: cover; border-radius: 10px; }
+  .insp figcaption { font-size: .72rem; line-height: 1.25; color: var(--muted); margin-top: 4px; }
+  .insp .rm {
+    position: absolute; top: 4px; right: 4px; width: 26px; height: 26px; border-radius: 50%; border: 0;
+    background: rgba(0,0,0,.6); color: #fff; font-size: 16px; line-height: 1; cursor: pointer;
+  }
+  .insp-empty { border: 1px dashed var(--line); border-radius: 12px; padding: 14px; text-align: center; color: var(--muted); font-size: .9rem; }
+  .linkbtn { font: inherit; font-weight: 600; color: var(--accent); background: none; border: 0; padding: 4px 0; cursor: pointer; }
+
+  /* Gallery bottom bar */
+  .gbar {
+    position: sticky; bottom: 0; margin: 18px -16px 0; padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
+    background: var(--bg); border-top: 1px solid var(--line); display: flex; align-items: center; gap: 12px;
+  }
+  .gbar span { flex: 1; font-size: .92rem; color: var(--muted); }
+  .gbar .submit { width: auto; padding: 11px 18px; font-size: .95rem; }
 
   /* Gallery */
   .filters { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; margin-bottom: 14px; scrollbar-width: none; }
@@ -97,11 +128,6 @@
   }
   .card.liked { outline: 3px solid var(--accent); outline-offset: -3px; }
   .card.liked .heart { background: var(--accent); color: #fff; }
-  .liked-bar {
-    margin-top: 14px; padding: 10px 14px; border-radius: var(--radius); background: var(--accent-soft);
-    font-size: .9rem; display: none;
-  }
-  .liked-bar.show { display: block; }
 
   /* Lightbox */
   dialog { border: 0; padding: 0; background: transparent; max-width: min(92vw, 640px); width: 100%; }
@@ -171,22 +197,31 @@
     <header>
       <h1 class="brand">Three Jewels Artistry Co</h1>
       <p class="tag">Handmade silver jewelry &amp; malas, made to order · <a href="https://instagram.com/threejewelsartistryco" target="_blank" rel="noopener">@threejewelsartistryco</a></p>
-      <ol class="steps">
-        <li><b>1</b> Browse pieces</li>
-        <li><b>2</b> ♡ the ones you love</li>
-        <li><b>3</b> Tell me your idea</li>
-      </ol>
     </header>
+  </div>
 
-    <section id="gallery">
+  <nav class="tabbar">
+    <div class="wrap">
+      <div class="tabs" role="tablist" aria-label="Sections">
+        <button type="button" role="tab" id="tab-intake" aria-controls="order" aria-selected="true">Intake</button>
+        <button type="button" role="tab" id="tab-gallery" aria-controls="gallery" aria-selected="false">Gallery <span class="badge" id="tabBadge"></span></button>
+      </div>
+    </div>
+  </nav>
+
+  <div class="wrap">
+    <section id="gallery" role="tabpanel" aria-labelledby="tab-gallery" hidden>
       <h2>Pieces I've made</h2>
-      <p class="sub">Tap a photo to see it larger. Tap ♡ to add it to your request as inspiration.</p>
+      <p class="sub">Tap a photo to see it larger. Tap ♡ to save it to your request as inspiration.</p>
       <div class="filters" role="group" aria-label="Filter pieces" id="filters"></div>
       <div id="grid"></div>
-      <div class="liked-bar" id="likedBar" aria-live="polite"></div>
+      <div class="gbar">
+        <span id="gbarText" aria-live="polite">Tap ♡ on pieces you love</span>
+        <button type="button" class="submit" data-go="intake">Back to Intake →</button>
+      </div>
     </section>
 
-    <section id="order">
+    <section id="order" role="tabpanel" aria-labelledby="tab-intake">
       <h2>Request a custom piece</h2>
       <p class="sub">I'll reach out to talk through stones, sizing, and pricing.</p>
 
@@ -226,6 +261,11 @@
         <div class="field">
           <span class="label">Elements you'd like <span class="opt">(optional, tap any)</span></span>
           <div id="elements"></div>
+        </div>
+
+        <div class="field">
+          <span class="label">Inspiration pieces <span class="opt">(optional)</span></span>
+          <div id="insp"></div>
         </div>
 
         <div class="field">
@@ -364,13 +404,50 @@ $("#grid").addEventListener("click", e => {
 
 function toggleLike(i) {
   liked.has(i) ? liked.delete(i) : liked.add(i);
-  renderGrid(); updateLikedBar(); syncLbBtn();
+  renderGrid(); updateLiked(); syncLbBtn();
 }
-function updateLikedBar() {
-  const bar = $("#likedBar");
-  bar.classList.toggle("show", liked.size > 0);
-  bar.textContent = liked.size ? `♥ ${liked.size} piece${liked.size>1?'s':''} saved as inspiration. They'll be included with your request below.` : "";
+// Keep the tab badge, gallery bar, and Intake thumbnails in sync with saved pieces
+function updateLiked() {
+  const n = liked.size;
+  $("#tabBadge").textContent = n;
+  $("#tabBadge").classList.toggle("show", n > 0);
+  $("#gbarText").textContent = n ? `♥ ${n} piece${n>1?'s':''} saved` : "Tap ♡ on pieces you love";
+  $("#insp").innerHTML = n
+    ? `<div class="insp">${[...liked].map(i => `
+        <figure>
+          <img src="images/${PHOTOS[i].f}.jpg" alt="${PHOTOS[i].t}">
+          <button type="button" class="rm" data-rm="${i}" aria-label="Remove ${PHOTOS[i].t}">×</button>
+          <figcaption>${PHOTOS[i].t}</figcaption>
+        </figure>`).join("")}</div>
+       <button type="button" class="linkbtn" data-go="gallery">+ Add more from the Gallery</button>`
+    : `<div class="insp-empty">Seen something you love? <br><button type="button" class="linkbtn" data-go="gallery">Browse the Gallery →</button></div>`;
 }
+$("#insp").addEventListener("click", e => {
+  const rm = e.target.closest("[data-rm]");
+  if (rm) toggleLike(+rm.dataset.rm);
+});
+
+// Tabs: Intake <-> Gallery. Form entries and saved pieces stay put while switching.
+function showTab(name) {
+  const gallery = name === "gallery";
+  $("#gallery").hidden = !gallery;
+  $("#order").hidden = gallery;
+  $("#tab-gallery").setAttribute("aria-selected", gallery);
+  $("#tab-intake").setAttribute("aria-selected", !gallery);
+  const want = gallery ? "#gallery" : "#intake";
+  if (location.hash !== want && !(location.hash === "" && !gallery)) history.pushState(null, "", want);
+  // Start the new tab at its top, just under the header (don't jump if already above that)
+  const headerBottom = $("header").getBoundingClientRect().bottom + window.scrollY;
+  if (window.scrollY > headerBottom) window.scrollTo({ top: headerBottom, behavior: "instant" });
+}
+$("#tab-intake").onclick = () => showTab("intake");
+$("#tab-gallery").onclick = () => showTab("gallery");
+document.addEventListener("click", e => {
+  const go = e.target.closest("[data-go]");
+  if (go) showTab(go.dataset.go);
+});
+// Phone back button flips between tabs
+window.addEventListener("popstate", () => showTab(location.hash === "#gallery" ? "gallery" : "intake"));
 
 // Lightbox
 const lb = $("#lightbox");
@@ -415,7 +492,7 @@ $("#form").addEventListener("submit", async e => {
   mark("#f-phone", !phone && !email);
   mark("#f-email", !!email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email));
   mark("#f-type", !type);
-  if (bad) { bad.scrollIntoView({behavior:"smooth", block:"center"}); return; }
+  if (bad) { bad.scrollIntoView({behavior:"smooth", block:"center"}); bad.querySelector("input")?.focus({preventScroll:true}); return; }
 
   const data = new URLSearchParams({
     name, phone, email, type,
@@ -444,11 +521,13 @@ $("#again").onclick = () => {
   const f = $("#form"); f.reset(); f.hidden = false;
   $("#done").style.display = "none";
   document.querySelectorAll("#elements button").forEach(b => b.setAttribute("aria-pressed","false"));
-  liked.clear(); renderGrid(); updateLikedBar();
+  liked.clear(); renderGrid(); updateLiked();
   window.scrollTo({top:0, behavior:"smooth"});
 };
 
 renderGrid();
+updateLiked();
+if (location.hash === "#gallery") showTab("gallery");
 </script>
 </body>
 </html>
