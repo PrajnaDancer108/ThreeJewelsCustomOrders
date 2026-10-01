@@ -8,7 +8,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <style>
   /* Letter-size printable sign. Always light, so it prints the same everywhere. */
-  :root { color-scheme: light; --ink: #2b2420; --muted: #6f625a; --accent: #a4532f; --line: #e3d8cc; --paper: #fffdf9; }
+  :root { color-scheme: light; --ink: #22252b; --muted: #5e636d; --accent: #1f5c52; --amethyst: #553a68; --line: #e0dcd5; --paper: #fffefc; }
   @page { size: letter; margin: 0; }
   * { box-sizing: border-box; }
   body { margin: 0; background: #e9e2d9; font-family: Inter, system-ui, sans-serif; color: var(--ink);
@@ -20,7 +20,8 @@
     box-shadow: 0 4px 24px rgba(0,0,0,.12); position: relative; overflow: hidden;
   }
   .sign::before { content: ""; position: absolute; inset: .25in; border: 1.5px solid var(--line); border-radius: 18px; pointer-events: none; }
-  .brand { font-family: "Cormorant Garamond", serif; font-weight: 600; font-size: 62px; line-height: 1.05; letter-spacing: .02em; margin: 0; }
+  .sign::after { content: ""; position: absolute; top: .25in; left: 1.2in; right: 1.2in; height: 5px; border-radius: 0 0 5px 5px; background: linear-gradient(90deg, #1f5c52, #2e4a7d, #553a68, #8c2f42); }
+  .brand { font-family: "Cormorant Garamond", serif; font-weight: 600; font-size: 62px; line-height: 1.05; letter-spacing: .02em; margin: 0; color: var(--amethyst); }
   .ig { font-size: 16px; color: var(--muted); margin: 4px 0 0; }
   .photos { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; width: 100%; margin: 26px 0 0; }
   .photos img { width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 12px; display: block; }
