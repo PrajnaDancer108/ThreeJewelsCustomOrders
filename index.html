@@ -261,6 +261,8 @@
         <div class="field">
           <span class="label">Elements you'd like <span class="opt">(optional, tap any)</span></span>
           <div id="elements"></div>
+          <div class="group-title"><label for="stone" style="font:inherit;margin:0">Stone</label></div>
+          <input type="text" id="stone" name="stone" placeholder="Turquoise, lapis, your own stone…">
         </div>
 
         <div class="field">
@@ -310,13 +312,12 @@
    - PHOTOS: file (in /images), caption, category
      Category must match a REQUEST_TYPES filter: ring, pendant, bracelet, mala
    ============================================================ */
-const REQUEST_TYPES = ["Pendant", "Beaded Necklace", "Earrings", "Bracelet", "Ring", "Mala", "Something else"];
+const REQUEST_TYPES = ["Pendant", "Necklace", "Beaded Necklace", "Earrings", "Bracelet", "Ring", "Mala", "Something else"];
 
 const ELEMENTS = {
   "Setting & border": ["Twisted wire border", "Sawtooth bezel", "Crown / lace bezel", "Smooth bezel", "Silver dot accents", "Stamped design"],
   "Band (rings & cuffs)": ["Thin band", "Split / double band", "Wide band", "Hammered texture", "Stacking band"],
-  "Malas & beads": ["Guru bead", "Tassel", "Pendant on mala", "Beaded bracelet"],
-  "Stone": ["Turquoise", "Lapis", "Garnet", "Labradorite", "Green stone", "Bring my own stone"]
+  "Malas & beads": ["Guru bead", "Tassel", "Pendant on mala", "Beaded bracelet"]
 };
 
 const PHOTOS = [
@@ -498,7 +499,9 @@ $("#form").addEventListener("submit", async e => {
     name, phone, email, type,
     ringSize: f.ringSize.value.trim(),
     notes: f.notes.value.trim(),
-    elements: [...document.querySelectorAll("#elements button[aria-pressed=true]")].map(b => b.textContent).join(", "),
+    // Stone is typed in, and it lands in the Elements column as "Stone: ..."
+    elements: [...[...document.querySelectorAll("#elements button[aria-pressed=true]")].map(b => b.textContent),
+               f.stone.value.trim() && `Stone: ${f.stone.value.trim()}`].filter(Boolean).join(", "),
     inspiration: [...liked].map(i => PHOTOS[i].t).join("; "),
     website: f.website.value
   });
