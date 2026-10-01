@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Booth QR Sign</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<style>
+  body { margin: 0; background: #e9e2d9; font-family: Inter, system-ui, sans-serif; color: #2b2420; }
+  .note { max-width: 560px; margin: 16px auto; padding: 0 16px; font-size: .9rem; color: #6f625a; text-align: center; }
+  .sign {
+    width: 5.5in; min-height: 8.5in; margin: 0 auto 32px; background: #fffdf9; padding: .6in .5in;
+    box-sizing: border-box; text-align: center; box-shadow: 0 4px 24px rgba(0,0,0,.12);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+  }
+  .brand { font-family: "Cormorant Garamond", serif; font-weight: 600; font-size: 30px; margin: 0; }
+  h1 { font-family: "Cormorant Garamond", serif; font-weight: 600; font-size: 46px; line-height: 1.05; margin: 22px 0 8px; color: #a4532f; }
+  p { margin: 0; font-size: 16px; color: #6f625a; }
+  #qr { margin: 28px 0 18px; padding: 14px; border: 2px solid #e3d8cc; border-radius: 16px; }
+  #qr img, #qr canvas { width: 2.6in !important; height: 2.6in !important; }
+  .url { font-size: 12px; color: #6f625a; word-break: break-all; }
+  .ig { margin-top: 18px; font-weight: 500; color: #2b2420; }
+  @media print {
+    body { background: #fff; }
+    .note { display: none; }
+    .sign { box-shadow: none; margin: 0 auto; }
+    @page { size: 5.5in 8.5in; margin: 0; }
+  }
+</style>
+</head>
+<body>
+  <p class="note">Print this page (⌘P) for your booth. The QR code points to your order form automatically.</p>
+  <div class="sign">
+    <p class="brand">Three Jewels Artistry Co</p>
+    <h1>Custom orders<br>welcome</h1>
+    <p>Scan to see my work &amp; request your own piece</p>
+    <div id="qr"></div>
+    <p class="url" id="url"></p>
+    <p class="ig">@threejewelsartistryco</p>
+  </div>
+<script>
+  const formUrl = new URL("./", location.href).href;
+  document.getElementById("url").textContent = formUrl.replace(/^https?:\/\//, "");
+  new QRCode(document.getElementById("qr"), { text: formUrl, width: 512, height: 512, correctLevel: QRCode.CorrectLevel.M });
+</script>
+</body>
+</html>

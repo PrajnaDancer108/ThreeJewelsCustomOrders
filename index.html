@@ -1,0 +1,440 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Custom Orders · Three Jewels Artistry Co</title>
+<meta name="description" content="Request a custom handmade piece from Three Jewels Artistry Co.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<script>
+  /* SETTINGS: paste your Google Apps Script Web App URL here (see SETUP.md) */
+  const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzkQgzqTlYTVhyl6cQP0UsJOVyMmlqNWW06GBqtp1D4YR0AxLpDucT3bQNUfIwudZvW/exec";
+</script>
+<style>
+  :root {
+    --bg: #f6f1ea;
+    --surface: #fffdf9;
+    --ink: #2b2420;
+    --muted: #6f625a;
+    --line: #e3d8cc;
+    --accent: #a4532f;        /* terracotta */
+    --accent-ink: #ffffff;
+    --accent-soft: #f3e1d6;
+    --sage: #5f7a68;
+    --sage-soft: #e3ebe4;
+    --error: #b3261e;
+    --radius: 14px;
+    --shadow: 0 1px 2px rgba(43,36,32,.06), 0 6px 20px rgba(43,36,32,.06);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #1c1816;
+      --surface: #262120;
+      --ink: #f2ebe4;
+      --muted: #b3a69c;
+      --line: #3a332f;
+      --accent: #d9825a;
+      --accent-ink: #1c1816;
+      --accent-soft: #3d2a20;
+      --sage: #9db8a5;
+      --sage-soft: #26302a;
+      --error: #f2b8b5;
+      --shadow: none;
+    }
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0; background: var(--bg); color: var(--ink);
+    font: 16px/1.55 Inter, system-ui, -apple-system, sans-serif;
+  }
+  img { max-width: 100%; display: block; }
+  .wrap { max-width: 760px; margin: 0 auto; padding: 0 16px; }
+
+  header { padding: 40px 0 8px; text-align: center; }
+  .brand { font-family: "Cormorant Garamond", serif; font-weight: 600; font-size: 2.3rem; line-height: 1.1; margin: 0; letter-spacing: .01em; }
+  .tag { color: var(--muted); margin: 8px 0 0; }
+  .tag a { color: var(--accent); text-decoration: none; font-weight: 500; }
+
+  h2 { font-family: "Cormorant Garamond", serif; font-weight: 600; font-size: 1.7rem; margin: 0 0 4px; }
+  .sub { color: var(--muted); margin: 0 0 16px; font-size: .95rem; }
+  section { padding: 28px 0 8px; }
+
+  /* Steps */
+  .steps { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin: 20px 0 0; padding: 0; list-style: none; font-size: .85rem; color: var(--muted); }
+  .steps li { background: var(--surface); border: 1px solid var(--line); border-radius: 999px; padding: 6px 12px; }
+  .steps b { color: var(--accent); }
+
+  /* Gallery */
+  .filters { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; margin-bottom: 14px; scrollbar-width: none; }
+  .filters::-webkit-scrollbar { display: none; }
+  .filters button {
+    flex: none; border: 1px solid var(--line); background: var(--surface); color: var(--ink);
+    padding: 8px 14px; border-radius: 999px; font: inherit; font-size: .9rem; cursor: pointer;
+  }
+  .filters button[aria-pressed="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+  .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+  @media (min-width: 600px) { .grid { grid-template-columns: repeat(3, 1fr); } }
+  .card {
+    position: relative; border-radius: var(--radius); overflow: hidden; background: var(--line);
+    aspect-ratio: 3 / 4; border: 0; padding: 0; cursor: pointer; box-shadow: var(--shadow);
+  }
+  .card img { width: 100%; height: 100%; object-fit: cover; transition: transform .3s; }
+  .card:hover img { transform: scale(1.03); }
+  .card .cap {
+    position: absolute; left: 0; right: 0; bottom: 0; padding: 22px 10px 8px;
+    background: linear-gradient(transparent, rgba(0,0,0,.65)); color: #fff; font-size: .8rem; text-align: left; line-height: 1.3;
+  }
+  .card .heart {
+    position: absolute; top: 8px; right: 8px; width: 34px; height: 34px; border-radius: 50%;
+    background: rgba(255,255,255,.9); color: #a4532f; display: grid; place-items: center; font-size: 18px; line-height: 1;
+    box-shadow: 0 1px 4px rgba(0,0,0,.2);
+  }
+  .card.liked { outline: 3px solid var(--accent); outline-offset: -3px; }
+  .card.liked .heart { background: var(--accent); color: #fff; }
+  .liked-bar {
+    margin-top: 14px; padding: 10px 14px; border-radius: var(--radius); background: var(--accent-soft);
+    font-size: .9rem; display: none;
+  }
+  .liked-bar.show { display: block; }
+
+  /* Lightbox */
+  dialog { border: 0; padding: 0; background: transparent; max-width: min(92vw, 640px); width: 100%; }
+  dialog::backdrop { background: rgba(20,16,14,.85); }
+  .lb { background: var(--surface); color: var(--ink); border-radius: var(--radius); overflow: hidden; }
+  .lb img { width: 100%; max-height: 70vh; object-fit: contain; background: #111; }
+  .lb-foot { display: flex; align-items: center; gap: 10px; padding: 12px 14px; }
+  .lb-foot p { margin: 0; flex: 1; font-size: .95rem; }
+  .lb-close { position: absolute; top: 10px; right: 10px; width: 38px; height: 38px; border-radius: 50%; border: 0; background: rgba(255,255,255,.92); font-size: 22px; cursor: pointer; color: #222; }
+
+  /* Form */
+  form { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 20px 16px; box-shadow: var(--shadow); }
+  @media (min-width: 600px) { form { padding: 28px; } }
+  .field { margin-bottom: 18px; }
+  label, .label { display: block; font-weight: 600; font-size: .95rem; margin-bottom: 6px; }
+  .opt { font-weight: 400; color: var(--muted); font-size: .85rem; }
+  input[type=text], input[type=tel], input[type=email], textarea, select {
+    width: 100%; font: inherit; font-size: 16px; color: var(--ink); background: var(--bg);
+    border: 1px solid var(--line); border-radius: 10px; padding: 12px 12px;
+  }
+  textarea { min-height: 120px; resize: vertical; }
+  input:focus, textarea:focus, select:focus { outline: 2px solid var(--accent); outline-offset: 1px; border-color: transparent; }
+  .row { display: grid; gap: 0 14px; }
+  @media (min-width: 600px) { .row { grid-template-columns: 1fr 1fr; } }
+
+  .types { display: grid; grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); gap: 8px; }
+  .types input { position: absolute; opacity: 0; pointer-events: none; }
+  .types label {
+    margin: 0; font-weight: 500; text-align: center; padding: 12px 8px; border-radius: 10px; cursor: pointer;
+    border: 1px solid var(--line); background: var(--bg);
+  }
+  .types input:checked + label { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+  .types input:focus-visible + label { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  .chips button {
+    font: inherit; font-size: .88rem; border: 1px solid var(--line); background: var(--bg); color: var(--ink);
+    padding: 7px 12px; border-radius: 999px; cursor: pointer;
+  }
+  .chips button[aria-pressed="true"] { background: var(--sage-soft); border-color: var(--sage); color: var(--ink); }
+  .chips button[aria-pressed="true"]::before { content: "✓ "; color: var(--sage); font-weight: 600; }
+  .group-title { font-size: .8rem; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin: 12px 0 6px; }
+
+  .err { color: var(--error); font-size: .85rem; margin-top: 4px; display: none; }
+  .field.invalid .err { display: block; }
+  .field.invalid input, .field.invalid .types { outline: 2px solid var(--error); outline-offset: 2px; border-radius: 10px; }
+
+  .hp { position: absolute; left: -9999px; }
+  .submit {
+    width: 100%; border: 0; border-radius: 12px; padding: 15px; font: inherit; font-weight: 600; font-size: 1.05rem;
+    background: var(--accent); color: var(--accent-ink); cursor: pointer;
+  }
+  .submit[disabled] { opacity: .6; cursor: wait; }
+  .fine { color: var(--muted); font-size: .8rem; text-align: center; margin: 12px 0 0; }
+
+  .done { text-align: center; padding: 40px 16px; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); display: none; }
+  .done .big { font-family: "Cormorant Garamond", serif; font-size: 2rem; margin: 0 0 8px; }
+  .done button { margin-top: 18px; border: 1px solid var(--line); background: var(--bg); color: var(--ink); padding: 12px 18px; border-radius: 10px; font: inherit; cursor: pointer; }
+  .banner { display:none; background: var(--accent-soft); border-radius: 10px; padding: 10px 12px; font-size: .9rem; margin-bottom: 16px; }
+
+  footer { text-align: center; color: var(--muted); font-size: .85rem; padding: 36px 0 48px; }
+  footer a { color: inherit; }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <h1 class="brand">Three Jewels Artistry Co</h1>
+      <p class="tag">Handmade silver jewelry &amp; malas, made to order · <a href="https://instagram.com/threejewelsartistryco" target="_blank" rel="noopener">@threejewelsartistryco</a></p>
+      <ol class="steps">
+        <li><b>1</b> Browse pieces</li>
+        <li><b>2</b> ♡ the ones you love</li>
+        <li><b>3</b> Tell me your idea</li>
+      </ol>
+    </header>
+
+    <section id="gallery">
+      <h2>Pieces I've made</h2>
+      <p class="sub">Tap a photo to see it larger. Tap ♡ to add it to your request as inspiration.</p>
+      <div class="filters" role="group" aria-label="Filter pieces" id="filters"></div>
+      <div class="grid" id="grid"></div>
+      <div class="liked-bar" id="likedBar" aria-live="polite"></div>
+    </section>
+
+    <section id="order">
+      <h2>Request a custom piece</h2>
+      <p class="sub">I'll reach out to talk through stones, sizing, and pricing.</p>
+
+      <form id="form" novalidate>
+        <div class="banner" id="setupBanner">Setup isn't finished: add your Apps Script URL near the top of <code>index.html</code>. Submissions won't be saved until you do.</div>
+
+        <div class="field" id="f-name">
+          <label for="name">Name</label>
+          <input type="text" id="name" name="name" autocomplete="name" required>
+          <div class="err">Please enter your name.</div>
+        </div>
+
+        <div class="row">
+          <div class="field" id="f-phone">
+            <label for="phone">Phone number</label>
+            <input type="tel" id="phone" name="phone" autocomplete="tel" inputmode="tel">
+            <div class="err">Please enter a phone number or email.</div>
+          </div>
+          <div class="field" id="f-email">
+            <label for="email">Email</label>
+            <input type="email" id="email" name="email" autocomplete="email" inputmode="email">
+            <div class="err">That email doesn't look quite right.</div>
+          </div>
+        </div>
+
+        <div class="field" id="f-type">
+          <span class="label" id="typeLabel">What would you like?</span>
+          <div class="types" role="radiogroup" aria-labelledby="typeLabel" id="types"></div>
+          <div class="err">Please choose a request type.</div>
+        </div>
+
+        <div class="field" id="f-size">
+          <label for="ringSize">Size/Measurement <span class="opt">(optional)</span></label>
+          <input type="text" id="ringSize" name="ringSize" placeholder="Any size or measurement for your piece">
+        </div>
+
+        <div class="field">
+          <span class="label">Elements you'd like <span class="opt">(optional, tap any)</span></span>
+          <div id="elements"></div>
+        </div>
+
+        <div class="field">
+          <label for="notes">Tell me about your idea</label>
+          <textarea id="notes" name="notes" placeholder="Stone or color you love, metal, size, who it's for, a date you need it by…"></textarea>
+        </div>
+
+        <input class="hp" type="text" name="website" tabindex="-1" autocomplete="off" aria-hidden="true">
+
+        <button class="submit" type="submit" id="submitBtn">Send my request</button>
+        <p class="fine">Your info is only used to follow up on this order.</p>
+      </form>
+
+      <div class="done" id="done" role="status">
+        <p class="big">Thank you! ✦</p>
+        <p>Your request is in. I'll be in touch soon to talk through the details.</p>
+        <button type="button" id="again">Start another request</button>
+      </div>
+    </section>
+
+    <footer>
+      © Three Jewels Artistry Co · <a href="https://instagram.com/threejewelsartistryco" target="_blank" rel="noopener">Instagram</a>
+    </footer>
+  </div>
+
+  <dialog id="lightbox" aria-label="Photo">
+    <div class="lb" style="position:relative">
+      <button class="lb-close" id="lbClose" aria-label="Close">×</button>
+      <img id="lbImg" alt="">
+      <div class="lb-foot">
+        <p id="lbCap"></p>
+        <button class="submit" style="width:auto;padding:10px 16px;font-size:.95rem" id="lbLike">♡ Inspiration</button>
+      </div>
+    </div>
+  </dialog>
+
+<script>
+/* ============================================================
+   EDIT YOUR CONTENT HERE
+   - REQUEST_TYPES: the buttons customers choose from
+   - ELEMENTS: tap-to-select details, grouped
+   - PHOTOS: file (in /images), caption, category
+     Category must match a REQUEST_TYPES filter: ring, pendant, bracelet, mala
+   ============================================================ */
+const REQUEST_TYPES = ["Pendant", "Earrings", "Bracelet", "Ring", "Mala", "Something else"];
+
+const ELEMENTS = {
+  "Setting & border": ["Twisted wire border", "Sawtooth bezel", "Crown / lace bezel", "Smooth bezel", "Silver dot accents", "Stamped design"],
+  "Band (rings & cuffs)": ["Thin band", "Split / double band", "Wide band", "Hammered texture", "Stacking band"],
+  "Malas & beads": ["Guru bead", "Tassel", "Pendant on mala", "Beaded bracelet"],
+  "Stone": ["Turquoise", "Lapis", "Garnet", "Labradorite", "Green stone", "Bring my own stone"]
+};
+
+const PHOTOS = [
+  { f: "ring-green-twisted",        c: "ring",     t: "Green stone ring, twisted wire border" },
+  { f: "cuff-turquoise",            c: "bracelet", t: "Turquoise cuff, twisted wire" },
+  { f: "mala-lapis-pendant",        c: "mala",     t: "Lapis mala with pendant" },
+  { f: "pendant-labradorite",       c: "pendant",  t: "Labradorite pendant, crown bezel" },
+  { f: "ring-pink-twisted",         c: "ring",     t: "Pink stone ring, twisted wire" },
+  { f: "ring-wide-hammered-blue",   c: "ring",     t: "Blue stone on wide hammered band" },
+  { f: "cuff-multicolor",           c: "bracelet", t: "Multicolor stone cuff" },
+  { f: "pendant-stamped",           c: "pendant",  t: "Stamped square pendant" },
+  { f: "mala-blue-tassel",          c: "mala",     t: "Blue mala with tassel" },
+  { f: "ring-orange-twisted",       c: "ring",     t: "Orange stone ring, twisted wire" },
+  { f: "ring-teardrop-sawtooth",    c: "ring",     t: "Green teardrop, sawtooth bezel" },
+  { f: "ring-teardrop-stack",       c: "ring",     t: "Teardrop ring with stacking band" },
+  { f: "cuff-cream",                c: "bracelet", t: "Cream & brown stone cuff" },
+  { f: "pendant-green-cord",        c: "pendant",  t: "Green oval pendant on cord" },
+  { f: "ring-garnet-crown-hammered",c: "ring",     t: "Garnet on hammered band" },
+  { f: "ring-wide-lapis",           c: "ring",     t: "Lapis on wide band" },
+  { f: "mala-red-guru",             c: "mala",     t: "Red mala, carved guru bead" },
+  { f: "cuff-green",                c: "bracelet", t: "Green stone cuff, silver dots" },
+  { f: "ring-wide-hammered-green",  c: "ring",     t: "Green stone, wide hammered band" },
+  { f: "ring-bronze-lace",          c: "ring",     t: "Bronze stone, lace bezel" },
+  { f: "pendant-lapis",             c: "pendant",  t: "Round lapis pendant" },
+  { f: "ring-green-crown-faceted",  c: "ring",     t: "Faceted green stone, crown bezel" },
+  { f: "cuff-worn-beaded",          c: "bracelet", t: "Turquoise cuff with beaded bracelet" },
+  { f: "mala-green",                c: "mala",     t: "Green & red bead mala" },
+  { f: "ring-red-twisted",          c: "ring",     t: "Red stone ring, twisted wire" },
+  { f: "pendant-dark-cord",         c: "pendant",  t: "Dark oval pendant on cord" },
+  { f: "ring-black-faceted",        c: "ring",     t: "Faceted black stone, double band" },
+  { f: "cuff-dark-oval",            c: "bracelet", t: "Sparkling dark stone cuff" },
+  { f: "ring-green-crown",          c: "ring",     t: "Green cabochon, crown bezel" },
+  { f: "ring-opal",                 c: "ring",     t: "Opal ring, double band" },
+  { f: "bracelet-red-beaded",       c: "bracelet", t: "Red beaded bracelet" },
+  { f: "mala-red-detail",           c: "mala",     t: "Red mala bead detail" },
+  { f: "ring-pair-worn",            c: "ring",     t: "Two rings, worn together" },
+  { f: "pendant-simple",            c: "pendant",  t: "Simple silver disc pendant" },
+  { f: "ring-garnet-boxed",         c: "ring",     t: "Garnet ring, twisted wire" },
+  { f: "ring-tray",                 c: "ring",     t: "A tray of small stone rings" },
+  { f: "collection",                c: "all",      t: "Pendants & cuffs collection" }
+];
+
+const FILTERS = [["all","All"],["ring","Rings"],["pendant","Pendants"],["bracelet","Bracelets"],["mala","Malas"]];
+
+/* ============================================================ */
+const $ = s => document.querySelector(s);
+const liked = new Set();
+let current = "all", lbIndex = -1;
+
+// Filters
+$("#filters").innerHTML = FILTERS.map(([k,l]) =>
+  `<button type="button" data-k="${k}" aria-pressed="${k==='all'}">${l}</button>`).join("");
+$("#filters").addEventListener("click", e => {
+  const b = e.target.closest("button"); if (!b) return;
+  current = b.dataset.k;
+  [...$("#filters").children].forEach(x => x.setAttribute("aria-pressed", x === b));
+  renderGrid();
+});
+
+function renderGrid() {
+  const list = PHOTOS.map((p,i) => ({...p,i})).filter(p => current === "all" || p.c === current || p.c === "all");
+  $("#grid").innerHTML = list.map(p => `
+    <button type="button" class="card ${liked.has(p.i)?'liked':''}" data-i="${p.i}" aria-label="${p.t}">
+      <img src="images/${p.f}.jpg" alt="${p.t}" loading="lazy" decoding="async">
+      <span class="heart" data-heart aria-hidden="true">${liked.has(p.i)?'♥':'♡'}</span>
+      <span class="cap">${p.t}</span>
+    </button>`).join("");
+}
+$("#grid").addEventListener("click", e => {
+  const card = e.target.closest(".card"); if (!card) return;
+  const i = +card.dataset.i;
+  if (e.target.closest("[data-heart]")) toggleLike(i); else openLb(i);
+});
+
+function toggleLike(i) {
+  liked.has(i) ? liked.delete(i) : liked.add(i);
+  renderGrid(); updateLikedBar(); syncLbBtn();
+}
+function updateLikedBar() {
+  const bar = $("#likedBar");
+  bar.classList.toggle("show", liked.size > 0);
+  bar.textContent = liked.size ? `♥ ${liked.size} piece${liked.size>1?'s':''} saved as inspiration. They'll be included with your request below.` : "";
+}
+
+// Lightbox
+const lb = $("#lightbox");
+function openLb(i) { lbIndex = i; $("#lbImg").src = `images/${PHOTOS[i].f}.jpg`; $("#lbImg").alt = PHOTOS[i].t; $("#lbCap").textContent = PHOTOS[i].t; syncLbBtn(); lb.showModal(); }
+function syncLbBtn() { if (lbIndex>=0) $("#lbLike").textContent = liked.has(lbIndex) ? "♥ Saved" : "♡ Inspiration"; }
+$("#lbLike").onclick = () => toggleLike(lbIndex);
+$("#lbClose").onclick = () => lb.close();
+lb.addEventListener("click", e => { if (e.target === lb) lb.close(); });
+
+// Request types
+$("#types").innerHTML = REQUEST_TYPES.map((t,i) =>
+  `<input type="radio" name="type" id="t${i}" value="${t}"><label for="t${i}">${t}</label>`).join("");
+$("#types").addEventListener("change", () => $("#f-type").classList.remove("invalid"));
+
+// Elements
+$("#elements").innerHTML = Object.entries(ELEMENTS).map(([g, items]) =>
+  `<div class="group-title">${g}</div><div class="chips">${items.map(x =>
+    `<button type="button" aria-pressed="false">${x}</button>`).join("")}</div>`).join("");
+$("#elements").addEventListener("click", e => {
+  const b = e.target.closest("button"); if (!b) return;
+  b.setAttribute("aria-pressed", b.getAttribute("aria-pressed") !== "true");
+});
+
+// Clear an error as soon as the customer starts fixing it
+$("#form").addEventListener("input", e => {
+  const fld = e.target.closest(".field"); if (fld) fld.classList.remove("invalid");
+  if (e.target.id === "phone" || e.target.id === "email") $("#f-phone").classList.remove("invalid");
+});
+
+// Submit
+const configured = SCRIPT_URL.startsWith("https://script.google.com/");
+if (!configured) $("#setupBanner").style.display = "block";
+
+$("#form").addEventListener("submit", async e => {
+  e.preventDefault();
+  const f = e.target;
+  const name = f.name.value.trim(), phone = f.phone.value.trim(), email = f.email.value.trim();
+  const type = (f.querySelector("input[name=type]:checked") || {}).value || "";
+  let bad = null;
+  const mark = (id, cond) => { $(id).classList.toggle("invalid", cond); if (cond && !bad) bad = $(id); };
+  mark("#f-name", !name);
+  mark("#f-phone", !phone && !email);
+  mark("#f-email", !!email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email));
+  mark("#f-type", !type);
+  if (bad) { bad.scrollIntoView({behavior:"smooth", block:"center"}); return; }
+
+  const data = new URLSearchParams({
+    name, phone, email, type,
+    ringSize: f.ringSize.value.trim(),
+    notes: f.notes.value.trim(),
+    elements: [...document.querySelectorAll("#elements button[aria-pressed=true]")].map(b => b.textContent).join(", "),
+    inspiration: [...liked].map(i => PHOTOS[i].t).join("; "),
+    website: f.website.value
+  });
+
+  const btn = $("#submitBtn");
+  btn.disabled = true; btn.textContent = "Sending…";
+  try {
+    if (!configured) throw new Error("not configured");
+    await fetch(SCRIPT_URL, { method: "POST", mode: "no-cors", body: data });
+    f.hidden = true; $("#done").style.display = "block";
+    $("#order").scrollIntoView({behavior:"smooth"});
+  } catch (err) {
+    alert("Sorry, that didn't go through. Please check your connection and try again, or let me know at the booth!");
+  } finally {
+    btn.disabled = false; btn.textContent = "Send my request";
+  }
+});
+
+$("#again").onclick = () => {
+  const f = $("#form"); f.reset(); f.hidden = false;
+  $("#done").style.display = "none";
+  document.querySelectorAll("#elements button").forEach(b => b.setAttribute("aria-pressed","false"));
+  liked.clear(); renderGrid(); updateLikedBar();
+  window.scrollTo({top:0, behavior:"smooth"});
+};
+
+renderGrid();
+</script>
+</body>
+</html>
