@@ -1,0 +1,652 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Sales Log · Three Jewels Artistry Co</title>
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<script>
+  /* SETTINGS: the same Apps Script URL as index.html (see SETUP.md) */
+  const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzkQgzqTlYTVhyl6cQP0UsJOVyMmlqNWW06GBqtp1D4YR0AxLpDucT3bQNUfIwudZvW/exec";
+</script>
+<style>
+  /* Same palette as the order form: emerald (main), amethyst (brand), sapphire (selections), garnet (alerts) */
+  :root {
+    --bg: #f4f2ee;
+    --surface: #fffefc;
+    --ink: #22252b;
+    --muted: #5e636d;
+    --line: #e0dcd5;
+    --accent: #1f5c52;
+    --accent-ink: #ffffff;
+    --accent-soft: #dcebe6;
+    --amethyst: #553a68;
+    --sapphire: #2e4a7d;
+    --sapphire-soft: #e2e8f3;
+    --garnet: #8c2f42;
+    --garnet-soft: #f5e4e7;
+    --error: #b3261e;
+    --radius: 14px;
+    --shadow: 0 1px 2px rgba(34,37,43,.05), 0 6px 20px rgba(34,37,43,.06);
+  }
+  :root { color-scheme: light; }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0; background: var(--bg); color: var(--ink);
+    font: 16px/1.55 Inter, system-ui, -apple-system, sans-serif;
+  }
+  .wrap { max-width: 760px; margin: 0 auto; padding: 0 16px; }
+
+  body::before { content: ""; display: block; height: 5px; background: linear-gradient(90deg, #1f5c52, #2e4a7d, #553a68, #8c2f42); }
+  header { padding: 28px 0 8px; text-align: center; }
+  .brand { font-family: "Cormorant Garamond", serif; font-weight: 600; font-size: clamp(1.7rem, 7vw, 2.2rem); line-height: 1.1; margin: 0; color: var(--amethyst); }
+  .tag { color: var(--muted); margin: 6px 0 0; }
+
+  h2 { font-family: "Cormorant Garamond", serif; font-weight: 600; font-size: 1.7rem; margin: 0 0 4px; }
+  section { padding: 20px 0 8px; }
+
+  form, .card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 20px 16px; box-shadow: var(--shadow); }
+  @media (min-width: 600px) { form, .card { padding: 28px; } }
+  fieldset { border: 0; padding: 0; margin: 0 0 8px; min-width: 0; }
+  legend { font-family: "Cormorant Garamond", serif; font-weight: 600; font-size: 1.35rem; padding: 0; margin: 0 0 12px; }
+  .divider { border: 0; border-top: 1px solid var(--line); margin: 22px 0; }
+
+  .field { margin-bottom: 18px; }
+  label, .label { display: block; font-weight: 600; font-size: .95rem; margin-bottom: 6px; }
+  .opt { font-weight: 400; color: var(--muted); font-size: .85rem; }
+  input[type=text], input[type=tel], input[type=email], input[type=date], input[type=number], textarea, select {
+    width: 100%; font: inherit; font-size: 16px; color: var(--ink); background: var(--bg);
+    border: 1px solid var(--line); border-radius: 10px; padding: 12px;
+    -webkit-appearance: none; appearance: none;
+  }
+  input[type=date] { min-height: 49px; }
+  select { background-image: linear-gradient(45deg, transparent 50%, var(--muted) 50%), linear-gradient(135deg, var(--muted) 50%, transparent 50%);
+           background-position: calc(100% - 18px) 50%, calc(100% - 13px) 50%; background-size: 5px 5px; background-repeat: no-repeat; padding-right: 32px; }
+  textarea { min-height: 90px; resize: vertical; }
+  input:focus, textarea:focus, select:focus { outline: 2px solid var(--accent); outline-offset: 1px; border-color: transparent; }
+  .row { display: grid; gap: 0 14px; }
+  @media (min-width: 600px) { .row { grid-template-columns: 1fr 1fr; } }
+  .money { position: relative; }
+  .money::before { content: "$"; position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--muted); pointer-events: none; }
+  .money input { padding-left: 24px; }
+  .pct { position: relative; }
+  .pct::after { content: "%"; position: absolute; right: 12px; top: 50%; transform: translateY(-50%); color: var(--muted); pointer-events: none; }
+  .pct input { padding-right: 28px; }
+
+  .check { display: flex; align-items: center; gap: 10px; font-weight: 500; margin: 0; cursor: pointer; }
+  .check input { width: 22px; height: 22px; accent-color: var(--accent); margin: 0; flex: none; }
+  .check-note { font-size: .85rem; color: var(--muted); margin: 6px 0 0 32px; }
+  .check-note .linkbtn { font: inherit; font-weight: 600; color: var(--accent); background: none; border: 0; padding: 0; cursor: pointer; }
+  #f-pin { margin: 10px 0 0 32px; max-width: 220px; }
+
+  .inv-meta { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; margin: -4px 0 16px; color: var(--muted); font-size: .9rem; }
+  .inv-meta strong { color: var(--ink); font-weight: 600; letter-spacing: .02em; }
+
+  /* Tap-to-pick choices */
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  .chips input { position: absolute; opacity: 0; pointer-events: none; }
+  .chips label {
+    margin: 0; font-weight: 500; font-size: .92rem; padding: 9px 14px; border-radius: 999px; cursor: pointer;
+    border: 1px solid var(--line); background: var(--bg);
+  }
+  .chips input:checked + label { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+  .chips input:focus-visible + label { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  /* Line items */
+  .item { border: 1px solid var(--line); border-radius: 12px; padding: 14px; margin-bottom: 10px; background: var(--bg); position: relative; }
+  .item input, .item select { background-color: var(--surface); }
+  .item-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+  .item-head span { font-size: .8rem; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+  .item .field { margin-bottom: 10px; }
+  .item .field:last-child { margin-bottom: 0; }
+  .item-nums { display: grid; grid-template-columns: 76px 1fr auto; gap: 10px; align-items: end; }
+  .line-total { font-weight: 600; padding-bottom: 12px; min-width: 76px; text-align: right; font-variant-numeric: tabular-nums; }
+  .rm-item { font: inherit; font-size: .88rem; color: var(--garnet); background: none; border: 0; padding: 4px 0; cursor: pointer; }
+  .add-item { width: 100%; font: inherit; font-weight: 600; color: var(--accent); background: var(--surface); border: 1px dashed var(--accent); border-radius: 12px; padding: 12px; cursor: pointer; }
+
+  /* Totals */
+  .totals { background: var(--accent-soft); border-radius: 12px; padding: 14px 16px; margin: 6px 0 18px; font-variant-numeric: tabular-nums; }
+  .totals div { display: flex; justify-content: space-between; padding: 3px 0; }
+  .totals .grand { font-weight: 600; font-size: 1.15rem; border-top: 1px solid rgba(31,92,82,.25); margin-top: 6px; padding-top: 9px; }
+  .totals .due { color: var(--garnet); font-weight: 600; }
+  .totals [hidden] { display: none; }
+
+  .err { color: var(--error); font-size: .85rem; margin-top: 4px; display: none; }
+  .invalid > .err { display: block; }
+  .field.invalid > input, .field.invalid > select, .field.invalid > .money input, .field.invalid > .chips, .field.invalid > .check { outline: 2px solid var(--error); outline-offset: 2px; border-radius: 10px; }
+
+  .hp { position: absolute; left: -9999px; }
+  .submit {
+    width: 100%; border: 0; border-radius: 12px; padding: 15px; font: inherit; font-weight: 600; font-size: 1.05rem;
+    background: var(--accent); color: var(--accent-ink); cursor: pointer;
+  }
+  .submit[disabled] { opacity: .6; cursor: wait; }
+  .ghost { width: 100%; border: 1px solid var(--line); background: var(--surface); color: var(--ink); padding: 13px; border-radius: 12px; font: inherit; font-weight: 600; cursor: pointer; }
+  .actions { display: grid; gap: 10px; margin-top: 18px; }
+  @media (min-width: 600px) { .actions { grid-template-columns: 1fr 1fr; } }
+
+  .banner { display: none; border-radius: 10px; padding: 10px 12px; font-size: .9rem; margin-bottom: 16px; background: var(--accent-soft); }
+  .banner.warn { background: var(--garnet-soft); }
+  .banner button { font: inherit; font-weight: 600; color: var(--accent); background: none; border: 0; padding: 0; cursor: pointer; text-decoration: underline; }
+
+  /* Receipt (shown after saving, and what prints) */
+  #receiptView { display: none; }
+  .status { text-align: center; margin-bottom: 16px; }
+  .status .big { font-family: "Cormorant Garamond", serif; font-size: 1.9rem; margin: 0; }
+  .status p { margin: 4px 0 0; color: var(--muted); }
+  .receipt { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 24px 18px; box-shadow: var(--shadow); }
+  @media (min-width: 600px) { .receipt { padding: 36px 40px; } }
+  .r-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; flex-wrap: wrap; }
+  .r-brand { font-family: "Cormorant Garamond", serif; font-weight: 600; font-size: 1.6rem; line-height: 1.1; color: var(--amethyst); margin: 0; }
+  .r-sub { color: var(--muted); font-size: .85rem; margin: 2px 0 0; }
+  .r-meta { text-align: right; font-size: .9rem; }
+  .r-meta .r-title { font-family: "Cormorant Garamond", serif; font-size: 1.4rem; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; }
+  .r-meta div { color: var(--muted); }
+  .r-bill { margin: 20px 0 14px; font-size: .92rem; }
+  .r-bill .k { font-size: .75rem; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+  .receipt table { width: 100%; border-collapse: collapse; font-size: .92rem; font-variant-numeric: tabular-nums; }
+  .receipt th { text-align: left; font-size: .75rem; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); font-weight: 500; border-bottom: 1px solid var(--line); padding: 6px 4px; }
+  .receipt td { padding: 9px 4px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  .receipt .n { text-align: right; white-space: nowrap; }
+  .receipt td .t { font-size: .8rem; color: var(--muted); }
+  .r-totals { margin-left: auto; width: min(100%, 280px); margin-top: 12px; font-variant-numeric: tabular-nums; font-size: .92rem; }
+  .r-totals div { display: flex; justify-content: space-between; padding: 3px 0; }
+  .r-totals .grand { font-weight: 600; font-size: 1.05rem; border-top: 1px solid var(--ink); margin-top: 4px; padding-top: 7px; }
+  .r-totals .due { color: var(--garnet); font-weight: 600; }
+  .r-pay { margin-top: 18px; font-size: .9rem; }
+  .r-thanks { text-align: center; font-family: "Cormorant Garamond", serif; font-size: 1.25rem; margin: 26px 0 0; color: var(--accent); }
+
+  footer { text-align: center; color: var(--muted); font-size: .85rem; padding: 36px 0 48px; }
+
+  @media print {
+    @page { margin: .5in; }
+    body { background: #fff; }
+    body::before, header, footer, .status, .actions, #formView { display: none !important; }
+    .wrap { max-width: none; padding: 0; }
+    section { padding: 0; }
+    .receipt { border: 0; box-shadow: none; padding: 0; }
+  }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <h1 class="brand">Three Jewels Artistry Co</h1>
+      <p class="tag">Sales log</p>
+    </header>
+
+    <section id="formView">
+      <form id="form" novalidate>
+        <div class="banner" id="setupBanner">Setup isn't finished: add your Apps Script URL near the top of <code>sales.html</code>. Sales won't be saved until you do.</div>
+        <div class="banner warn" id="outboxBanner" role="status"></div>
+
+        <div class="inv-meta">
+          <span>Invoice <strong id="invNo"></strong></span>
+          <span id="clock"></span>
+        </div>
+
+        <fieldset>
+          <legend>Sale</legend>
+          <div class="row">
+            <div class="field" id="f-date">
+              <label for="saleDate">Date</label>
+              <input type="date" id="saleDate" name="saleDate" required>
+              <div class="err">Please pick a date.</div>
+            </div>
+            <div class="field">
+              <label for="event">Market or location <span class="opt">(optional)</span></label>
+              <input type="text" id="event" name="event" list="eventList" placeholder="e.g. Saturday Farmers Market">
+              <datalist id="eventList"></datalist>
+            </div>
+          </div>
+          <div class="field" id="f-channel">
+            <span class="label" id="channelLabel">Where did it sell?</span>
+            <div class="chips" role="radiogroup" aria-labelledby="channelLabel" id="channels"></div>
+            <div class="err">Please choose where it sold.</div>
+          </div>
+        </fieldset>
+
+        <hr class="divider">
+
+        <fieldset>
+          <legend>Customer <span class="opt" style="font-family:Inter,sans-serif;font-size:.85rem">(optional)</span></legend>
+          <div class="field">
+            <label for="name">Name</label>
+            <input type="text" id="name" name="name" autocomplete="off">
+          </div>
+          <div class="row">
+            <div class="field">
+              <label for="phone">Phone</label>
+              <input type="tel" id="phone" name="phone" autocomplete="off" inputmode="tel">
+            </div>
+            <div class="field" id="f-email">
+              <label for="email">Email</label>
+              <input type="email" id="email" name="email" autocomplete="off" inputmode="email">
+              <div class="err">That email doesn't look quite right.</div>
+            </div>
+          </div>
+          <div class="field" id="f-sendReceipt">
+            <label class="check"><input type="checkbox" id="sendReceipt"> Email them a receipt</label>
+            <div class="err">Add their email above to send a receipt.</div>
+            <div id="receiptExtras" hidden>
+              <div class="field" id="f-pin">
+                <label for="pin">Your receipt PIN</label>
+                <input type="password" id="pin" inputmode="numeric" autocomplete="off">
+                <div class="err">Enter your PIN to send receipts.</div>
+              </div>
+              <p class="check-note" id="pinSaved">Sends from your Gmail once the sale saves. <button type="button" class="linkbtn" id="changePin">Change PIN</button></p>
+            </div>
+          </div>
+        </fieldset>
+
+        <hr class="divider">
+
+        <fieldset>
+          <legend>Items</legend>
+          <div id="items"></div>
+          <button type="button" class="add-item" id="addItem">+ Add another item</button>
+        </fieldset>
+
+        <hr class="divider">
+
+        <fieldset>
+          <legend>Payment</legend>
+          <div class="row">
+            <div class="field">
+              <label for="discount">Discount</label>
+              <div class="money"><input type="number" id="discount" name="discount" inputmode="decimal" min="0" step="0.01" placeholder="0.00"></div>
+            </div>
+            <div class="field">
+              <label for="shipping">Shipping</label>
+              <div class="money"><input type="number" id="shipping" name="shipping" inputmode="decimal" min="0" step="0.01" placeholder="0.00"></div>
+            </div>
+          </div>
+          <div class="field">
+            <label for="taxRate">Sales tax rate</label>
+            <div class="pct" style="max-width:160px"><input type="number" id="taxRate" name="taxRate" inputmode="decimal" min="0" step="0.001" placeholder="0"></div>
+          </div>
+
+          <div class="field" id="f-method">
+            <span class="label" id="methodLabel">Paid with</span>
+            <div class="chips" role="radiogroup" aria-labelledby="methodLabel" id="methods"></div>
+            <div class="err">Please choose how they paid.</div>
+          </div>
+
+          <div class="field">
+            <span class="label" id="statusLabel">Status</span>
+            <div class="chips" role="radiogroup" aria-labelledby="statusLabel" id="statuses"></div>
+          </div>
+
+          <div class="field" id="f-paid" hidden>
+            <label for="amountPaid">Amount paid so far</label>
+            <div class="money" style="max-width:200px"><input type="number" id="amountPaid" name="amountPaid" inputmode="decimal" min="0" step="0.01" placeholder="0.00"></div>
+            <div class="err">Amount paid can't be more than the total.</div>
+          </div>
+
+          <div class="totals" aria-live="polite">
+            <div><span>Subtotal</span><span id="tSub">$0.00</span></div>
+            <div id="tDiscRow" hidden><span>Discount</span><span id="tDisc"></span></div>
+            <div id="tTaxRow" hidden><span>Sales tax</span><span id="tTax"></span></div>
+            <div id="tShipRow" hidden><span>Shipping</span><span id="tShip"></span></div>
+            <div class="grand"><span>Total</span><span id="tTotal">$0.00</span></div>
+            <div id="tDueRow" class="due" hidden><span>Balance due</span><span id="tDue"></span></div>
+          </div>
+
+          <div class="field">
+            <label for="notes">Notes <span class="opt">(optional)</span></label>
+            <textarea id="notes" name="notes" placeholder="Custom order details, trade, follow-up, anything to remember…"></textarea>
+          </div>
+        </fieldset>
+
+        <input class="hp" type="text" name="website" tabindex="-1" autocomplete="off" aria-hidden="true">
+
+        <button class="submit" type="submit" id="submitBtn">Save sale</button>
+      </form>
+    </section>
+
+    <section id="receiptView">
+      <div class="status" role="status">
+        <p class="big" id="statusBig">Sale saved ✦</p>
+        <p id="statusSub">It's in your Google Sheet.</p>
+      </div>
+      <div class="receipt" id="receipt"></div>
+      <div class="actions">
+        <button type="button" class="ghost" id="printBtn">Print or save as PDF</button>
+        <button type="button" class="submit" id="newSale">Record another sale</button>
+      </div>
+    </section>
+
+    <footer>Three Jewels Artistry Co · sales log</footer>
+  </div>
+
+<script>
+/* ============================================================
+   EDIT YOUR CONTENT HERE
+   - ITEM_TYPES: the item dropdown on each line
+   - CHANNELS: where a sale happened
+   - METHODS: how the customer paid
+   - DEFAULT_TAX_RATE: your sales tax % (0 if you don't charge it)
+   - CONTACT_LINE: shown under your name on printed receipts
+   ============================================================ */
+const ITEM_TYPES = ["Pendant", "Necklace", "Beaded Necklace", "Earrings", "Bracelet", "Ring", "Mala", "Custom piece", "Other"];
+const CHANNELS = ["Market / booth", "Instagram", "Custom order", "In person", "Online", "Other"];
+const METHODS = ["Cash", "Card", "Venmo", "PayPal", "Zelle", "Other"];
+const STATUSES = ["Paid", "Deposit", "Unpaid"];
+const DEFAULT_TAX_RATE = 0;
+const CONTACT_LINE = "Handmade silver jewelry & malas · @threejewelsartistryco";
+
+/* ============================================================ */
+const $ = s => document.querySelector(s);
+const money = n => (n < 0 ? "−$" : "$") + Math.abs(n).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+const num = v => { const n = parseFloat(v); return isFinite(n) && n > 0 ? n : 0; };
+const cents = n => Math.round(n * 100) / 100;
+const esc = s => String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const pad = n => String(n).padStart(2, "0");
+const today = () => { const d = new Date(); return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`; };
+
+// Browser storage can be unavailable (private mode); everything still works without it.
+const store = {
+  get(k, d) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch { return d; } },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} }
+};
+
+// Invoice numbers look like TJ-261001-K7Q: date + 3 random characters.
+// The Sheet ignores a second copy of the same number, so a retried send never doubles up.
+let invoice = "";
+function newInvoice() {
+  const d = new Date(), r = Math.random().toString(36).slice(2, 5).toUpperCase().padEnd(3, "X");
+  invoice = `TJ-${String(d.getFullYear()).slice(2)}${pad(d.getMonth()+1)}${pad(d.getDate())}-${r}`;
+  $("#invNo").textContent = invoice;
+}
+
+function chips(el, name, list) {
+  el.innerHTML = list.map((t, i) =>
+    `<input type="radio" name="${name}" id="${name}${i}" value="${esc(t)}"><label for="${name}${i}">${esc(t)}</label>`).join("");
+}
+chips($("#channels"), "channel", CHANNELS);
+chips($("#methods"), "method", METHODS);
+chips($("#statuses"), "status", STATUSES);
+const pick = name => (document.querySelector(`input[name=${name}]:checked`) || {}).value || "";
+const setPick = (name, v) => { const el = [...document.querySelectorAll(`input[name=${name}]`)].find(x => x.value === v); if (el) el.checked = true; };
+
+// Line items
+let itemSeq = 0;
+function addItem(focus) {
+  const id = ++itemSeq;
+  const div = document.createElement("div");
+  div.className = "item"; div.dataset.id = id;
+  div.innerHTML = `
+    <div class="item-head"><span>Item</span><button type="button" class="rm-item" data-rm>Remove</button></div>
+    <div class="row">
+      <div class="field">
+        <label for="type${id}">Type</label>
+        <select id="type${id}" data-k="type">${ITEM_TYPES.map(t => `<option>${esc(t)}</option>`).join("")}</select>
+      </div>
+      <div class="field">
+        <label for="desc${id}">Description <span class="opt">(optional)</span></label>
+        <input type="text" id="desc${id}" data-k="desc" placeholder="Stone, size, style…">
+      </div>
+    </div>
+    <div class="item-nums">
+      <div class="field">
+        <label for="qty${id}">Qty</label>
+        <input type="number" id="qty${id}" data-k="qty" inputmode="numeric" min="1" step="1" value="1">
+      </div>
+      <div class="field" data-pricefield>
+        <label for="price${id}">Price each</label>
+        <div class="money"><input type="number" id="price${id}" data-k="price" inputmode="decimal" min="0" step="0.01" placeholder="0.00"></div>
+        <div class="err">Add a price.</div>
+      </div>
+      <div class="line-total" data-line>$0.00</div>
+    </div>`;
+  $("#items").appendChild(div);
+  syncItemHeads(); recalc();
+  if (focus) div.querySelector("select").focus();
+}
+function syncItemHeads() {
+  const items = [...document.querySelectorAll(".item")];
+  items.forEach((el, i) => {
+    el.querySelector(".item-head span").textContent = `Item ${i + 1}`;
+    el.querySelector("[data-rm]").hidden = items.length === 1;
+  });
+}
+$("#addItem").onclick = () => addItem(true);
+$("#items").addEventListener("click", e => {
+  if (!e.target.closest("[data-rm]")) return;
+  e.target.closest(".item").remove(); syncItemHeads(); recalc();
+});
+
+function readItems() {
+  return [...document.querySelectorAll(".item")].map(el => {
+    const g = k => el.querySelector(`[data-k=${k}]`).value;
+    const qty = Math.max(1, Math.round(num(g("qty"))) || 1), price = cents(num(g("price")));
+    return { el, type: g("type"), desc: g("desc").trim(), qty, price, total: cents(qty * price), hasPrice: g("price").trim() !== "" };
+  });
+}
+
+// Discount comes off before tax; shipping isn't taxed.
+function totals() {
+  const items = readItems();
+  const subtotal = cents(items.reduce((s, it) => s + it.total, 0));
+  const discount = Math.min(cents(num($("#discount").value)), subtotal);
+  const taxRate = num($("#taxRate").value);
+  const tax = cents((subtotal - discount) * taxRate / 100);
+  const shipping = cents(num($("#shipping").value));
+  const total = cents(subtotal - discount + tax + shipping);
+  const status = pick("status") || "Paid";
+  const paid = status === "Paid" ? total : status === "Unpaid" ? 0 : cents(num($("#amountPaid").value));
+  return { items, subtotal, discount, taxRate, tax, shipping, total, status, paid, due: cents(total - paid) };
+}
+
+function recalc() {
+  const t = totals();
+  t.items.forEach(it => it.el.querySelector("[data-line]").textContent = money(it.total));
+  $("#tSub").textContent = money(t.subtotal);
+  $("#tDiscRow").hidden = !t.discount; $("#tDisc").textContent = money(-t.discount);
+  $("#tTaxRow").hidden = !t.tax; $("#tTax").textContent = money(t.tax);
+  $("#tTaxRow").firstElementChild.textContent = `Sales tax (${t.taxRate}%)`;
+  $("#tShipRow").hidden = !t.shipping; $("#tShip").textContent = money(t.shipping);
+  $("#tTotal").textContent = money(t.total);
+  $("#f-paid").hidden = t.status !== "Deposit";
+  $("#tDueRow").hidden = t.status === "Paid" || t.due <= 0;
+  $("#tDue").textContent = money(t.due);
+}
+
+$("#form").addEventListener("input", e => {
+  const fld = e.target.closest(".field"); if (fld) fld.classList.remove("invalid");
+  recalc();
+});
+$("#form").addEventListener("change", e => {
+  const fld = e.target.closest(".field"); if (fld) fld.classList.remove("invalid");
+  recalc();
+});
+
+// Email receipt: ticks itself when you type an email (unless you unticked it).
+// The PIN is asked once per phone and must match RECEIPT_PIN in the Apps Script.
+let receiptTouched = false;
+const validEmail = v => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
+function syncReceipt() {
+  const on = $("#sendReceipt").checked, saved = !!store.get("ts-pin", "");
+  $("#receiptExtras").hidden = !on;
+  $("#f-pin").hidden = saved;
+  $("#pinSaved").hidden = !saved;
+}
+$("#email").addEventListener("input", () => {
+  if (!receiptTouched) $("#sendReceipt").checked = validEmail($("#email").value.trim());
+  syncReceipt();
+});
+$("#sendReceipt").addEventListener("change", () => { receiptTouched = true; syncReceipt(); });
+$("#changePin").onclick = () => { store.set("ts-pin", ""); $("#pin").value = ""; syncReceipt(); $("#pin").focus(); };
+
+// Remember the last market & payment method so booth entries are quick
+function rememberEvent(v) {
+  if (!v) return;
+  const list = [v, ...store.get("ts-events", []).filter(x => x !== v)].slice(0, 8);
+  store.set("ts-events", list);
+  renderEvents();
+}
+function renderEvents() {
+  $("#eventList").innerHTML = store.get("ts-events", []).map(v => `<option value="${esc(v)}">`).join("");
+}
+
+function resetForm() {
+  const f = $("#form"); f.reset();
+  $("#items").innerHTML = ""; addItem(false);
+  $("#saleDate").value = today();
+  $("#taxRate").value = DEFAULT_TAX_RATE || "";
+  const last = store.get("ts-last", {});
+  setPick("channel", last.channel || "");
+  setPick("method", last.method || "");
+  setPick("status", "Paid");
+  // Keep the same market if it's still the same day
+  if (last.event && last.date === today()) $("#event").value = last.event;
+  document.querySelectorAll(".invalid").forEach(x => x.classList.remove("invalid"));
+  receiptTouched = false; syncReceipt();
+  newInvoice(); recalc();
+}
+
+// Outbox: if the signal drops, the sale waits on this phone and sends later.
+const configured = SCRIPT_URL.startsWith("https://script.google.com/");
+if (!configured) $("#setupBanner").style.display = "block";
+
+async function send(params) {
+  if (!configured) throw new Error("not configured");
+  await fetch(SCRIPT_URL, { method: "POST", mode: "no-cors", body: new URLSearchParams(params) });
+}
+function renderOutbox() {
+  const q = store.get("ts-outbox", []), b = $("#outboxBanner");
+  b.style.display = q.length ? "block" : "none";
+  b.innerHTML = q.length ? `${q.length} sale${q.length > 1 ? "s are" : " is"} waiting on this phone to send. <button type="button" id="retry">Send now</button>` : "";
+}
+let flushing = false;
+async function flushOutbox() {
+  if (flushing) return; flushing = true;
+  try {
+    let q = store.get("ts-outbox", []);
+    while (q.length) {
+      try { await send(q[0]); } catch { break; }
+      q = q.slice(1); store.set("ts-outbox", q);
+    }
+  } finally { flushing = false; renderOutbox(); }
+}
+document.addEventListener("click", e => { if (e.target.id === "retry") flushOutbox(); });
+window.addEventListener("online", flushOutbox);
+
+// Submit
+$("#form").addEventListener("submit", async e => {
+  e.preventDefault();
+  const f = e.target, t = totals();
+  const email = f.email.value.trim(), channel = pick("channel"), method = pick("method");
+  let bad = null;
+  const mark = (el, cond) => { el.classList.toggle("invalid", cond); if (cond && !bad) bad = el; };
+  mark($("#f-date"), !f.saleDate.value);
+  mark($("#f-channel"), !channel);
+  t.items.forEach(it => mark(it.el.querySelector("[data-pricefield]"), !it.hasPrice));
+  mark($("#f-method"), !method && t.status !== "Unpaid");
+  mark($("#f-email"), !!email && !validEmail(email));
+  const emailIt = $("#sendReceipt").checked;
+  const pin = store.get("ts-pin", "") || $("#pin").value.trim();
+  mark($("#f-sendReceipt"), emailIt && !email);
+  mark($("#f-pin"), emailIt && !!email && !pin);
+  mark($("#f-paid"), t.status === "Deposit" && t.paid > t.total);
+  if (bad) { bad.scrollIntoView({ behavior: "smooth", block: "center" }); bad.querySelector("input,select")?.focus({ preventScroll: true }); return; }
+
+  const sale = {
+    form: "sale",
+    invoice,
+    saleDate: f.saleDate.value,
+    event: f.event.value.trim(),
+    channel,
+    name: f.name.value.trim(), phone: f.phone.value.trim(), email,
+    items: JSON.stringify(t.items.map(({ type, desc, qty, price, total }) => ({ type, desc, qty, price, total }))),
+    subtotal: t.subtotal, discount: t.discount, taxRate: t.taxRate, tax: t.tax, shipping: t.shipping, total: t.total,
+    method: t.status === "Unpaid" ? (method || "") : method,
+    status: t.status, paid: t.paid, due: t.due,
+    notes: f.notes.value.trim(),
+    emailReceipt: emailIt ? "1" : "",
+    pin: emailIt ? pin : "",
+    website: f.website.value
+  };
+  if (emailIt) store.set("ts-pin", pin);
+
+  const btn = $("#submitBtn");
+  btn.disabled = true; btn.textContent = "Saving…";
+  let queued = false;
+  try {
+    await flushOutbox();
+    await send(sale);
+  } catch {
+    store.set("ts-outbox", [...store.get("ts-outbox", []), sale]);
+    queued = true;
+  } finally {
+    btn.disabled = false; btn.textContent = "Save sale";
+  }
+
+  store.set("ts-last", { channel, method, event: sale.event, date: today() });
+  rememberEvent(sale.event);
+  renderOutbox();
+  showReceipt(sale, t, queued);
+});
+
+function showReceipt(s, t, queued) {
+  const d = new Date(s.saleDate + "T12:00:00");
+  const dateStr = d.toLocaleDateString(undefined, { year: "numeric", month: "long", day: "numeric" });
+  const bill = [s.name, s.phone, s.email].filter(Boolean).map(esc).join("<br>");
+  $("#receipt").innerHTML = `
+    <div class="r-top">
+      <div><p class="r-brand">Three Jewels Artistry Co</p><p class="r-sub">${esc(CONTACT_LINE)}</p></div>
+      <div class="r-meta"><div class="r-title">${t.due > 0 ? "Invoice" : "Receipt"}</div><div>${esc(s.invoice)}</div><div>${dateStr}</div></div>
+    </div>
+    ${bill ? `<div class="r-bill"><div class="k">Bill to</div>${bill}</div>` : `<div class="r-bill"></div>`}
+    <table>
+      <thead><tr><th>Item</th><th class="n">Qty</th><th class="n">Price</th><th class="n">Amount</th></tr></thead>
+      <tbody>${t.items.map(it => `
+        <tr><td>${esc(it.desc || it.type)}${it.desc ? `<div class="t">${esc(it.type)}</div>` : ""}</td>
+            <td class="n">${it.qty}</td><td class="n">${money(it.price)}</td><td class="n">${money(it.total)}</td></tr>`).join("")}
+      </tbody>
+    </table>
+    <div class="r-totals">
+      <div><span>Subtotal</span><span>${money(t.subtotal)}</span></div>
+      ${t.discount ? `<div><span>Discount</span><span>${money(-t.discount)}</span></div>` : ""}
+      ${t.tax ? `<div><span>Sales tax (${t.taxRate}%)</span><span>${money(t.tax)}</span></div>` : ""}
+      ${t.shipping ? `<div><span>Shipping</span><span>${money(t.shipping)}</span></div>` : ""}
+      <div class="grand"><span>Total</span><span>${money(t.total)}</span></div>
+      ${t.status !== "Paid" ? `<div><span>Paid</span><span>${money(t.paid)}</span></div>
+      <div class="due"><span>Balance due</span><span>${money(t.due)}</span></div>` : ""}
+    </div>
+    <div class="r-pay">${t.status === "Paid" ? `Paid in full${s.method ? ` · ${esc(s.method)}` : ""}`
+      : t.status === "Deposit" ? `Deposit received${s.method ? ` · ${esc(s.method)}` : ""}` : "Payment due"}</div>
+    <p class="r-thanks">Thank you ✦</p>`;
+  $("#statusBig").textContent = queued ? "Saved on this phone" : "Sale saved ✦";
+  const mail = s.emailReceipt ? ` Receipt ${queued ? "will be emailed" : "is being emailed"} to ${s.email}.` : "";
+  $("#statusSub").textContent = (queued
+    ? "No connection right now. It'll send to your Sheet automatically when you're back online."
+    : `${money(t.total)} · it's in your Google Sheet.`) + mail;
+  $("#formView").style.display = "none";
+  $("#receiptView").style.display = "block";
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+$("#printBtn").onclick = () => window.print();
+$("#newSale").onclick = () => {
+  resetForm();
+  $("#receiptView").style.display = "none";
+  $("#formView").style.display = "block";
+  window.scrollTo({ top: 0, behavior: "smooth" });
+};
+
+// Live clock next to the invoice number
+const tick = () => $("#clock").textContent = new Date().toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+tick(); setInterval(tick, 30000);
+
+renderEvents();
+resetForm();
+renderOutbox();
+flushOutbox();
+</script>
+</body>
+</html>
