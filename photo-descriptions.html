@@ -1,0 +1,198 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Photo Review</title>
+<style>
+  :root { color-scheme: light; --bg: #f4f2ee; --surface: #fffefc; --ink: #22252b; --muted: #5e636d; --line: #e0dcd5; --accent: #1f5c52; --sapphire: #2e4a7d; --soft: #e2e8f3; --new: #8c2f42; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.5 -apple-system, system-ui, sans-serif; }
+  .wrap { max-width: 960px; margin: 0 auto; padding: 24px 16px 120px; }
+  h1 { font-size: 1.5rem; margin: 0 0 6px; }
+  .intro { color: var(--muted); margin: 0 0 8px; }
+  .key { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; margin: 0 0 20px; font-size: .9rem; }
+  .key p { margin: 4px 0; }
+  .row { display: grid; grid-template-columns: 140px 1fr; gap: 16px; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 12px; margin-bottom: 10px; }
+  .row.suggest { border-color: var(--sapphire); box-shadow: inset 4px 0 0 var(--sapphire); }
+  .row img { width: 140px; height: 175px; object-fit: cover; border-radius: 8px; cursor: zoom-in; }
+  .file { font-family: ui-monospace, Menlo, monospace; font-size: .8rem; color: var(--muted); }
+  .tag { display: inline-block; font-size: .72rem; font-weight: 600; padding: 2px 8px; border-radius: 999px; margin-left: 6px; font-family: -apple-system, system-ui, sans-serif; }
+  .tag.new { background: #f6e3e7; color: var(--new); }
+  .tag.sug { background: var(--soft); color: var(--sapphire); }
+  .now { font-size: .85rem; color: var(--muted); margin: 2px 0 6px; }
+  .now b { color: var(--ink); font-weight: 500; }
+  label { display: block; font-size: .8rem; font-weight: 600; margin: 8px 0 4px; }
+  input, select { width: 100%; font: inherit; padding: 9px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); color: var(--ink); }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0 10px; }
+  .bar { position: fixed; left: 0; right: 0; bottom: 0; background: var(--surface); border-top: 1px solid var(--line); padding: 12px 16px; display: flex; gap: 12px; align-items: center; justify-content: center; }
+  .bar span { color: var(--muted); font-size: .9rem; }
+  button { font: inherit; font-weight: 600; border: 0; border-radius: 10px; padding: 11px 18px; background: var(--accent); color: #fff; cursor: pointer; }
+  dialog { border: 0; padding: 0; background: transparent; }
+  dialog img { max-width: 90vw; max-height: 90vh; border-radius: 10px; display: block; }
+  dialog::backdrop { background: rgba(0,0,0,.8); }
+  @media (max-width: 620px) { .row { grid-template-columns: 1fr; } .row img { width: 100%; height: 260px; } .grid2 { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Photo review</h1>
+  <p class="intro">Go through each photo and fix anything that's wrong. Your answers save in this browser as you go. When you're done, click <b>Copy all</b> at the bottom and paste the result into the chat with Claude.</p>
+  <div class="key">
+    <p><b>Description:</b> the caption customers see. Leave it blank to keep the current one.</p>
+    <p><b>Same piece as:</b> pick the main photo if this is another view of the same piece.</p>
+    <p><b>How to show it:</b> <i>Own card</i> if it shows something new (like a stamped back). <i>Tucked inside</i> if it's just another angle; customers can tap through to it from the main photo.</p>
+    <p><span class="tag sug">My guess</span> These rows have my suggested grouping filled in. Please check them. <span class="tag new">Not on site yet</span> These are extra shots I can add.</p>
+  </div>
+  <div id="list"></div>
+</div>
+<div class="bar"><span id="count"></span><button id="copy">Copy all</button></div>
+<dialog id="zoom"><img id="zoomImg" alt=""></dialog>
+<script>
+const PHOTOS = [
+  { f: "ring-green-twisted",        c: "ring",     t: "Chrysoprase ring, double band and twisted wire border" },
+  { f: "cuff-turquoise",            c: "bracelet", t: "Turquoise cuff, twisted wire" },
+  { f: "mala-lapis-pendant",        c: "mala",     t: "Lapis necklace with pendant" },
+  { f: "pendant-labradorite",       c: "pendant",  t: "Labradorite pendant, crown bezel, twisted border" },
+  { f: "pendant-stamped-back",      c: "pendant",  t: "Labradorite pendant, back detail" },
+  { f: "ring-pink-twisted",         c: "ring",     t: "Aurora opal ring, twisted wire, stamped and border embellished band" },
+  { f: "ring-wide-hammered-blue",   c: "ring",     t: "Sea green kyanite on hammered band, serrated bezel" },
+  { f: "cuff-multicolor",           c: "bracelet", t: "Turquoise cuff with plain bezel" },
+  { f: "pendant-stamped",           c: "pendant",  t: "Stamped square pendant" },
+  { f: "mala-blue-tassel",          c: "mala",     t: "Blue mala with tassel" },
+  { f: "ring-orange-twisted",       c: "ring",     t: "Spiny oyster shell ring, twisted wire, stamped and embellished band" },
+  { f: "ring-teardrop-sawtooth",    c: "ring",     t: "Rose cut emerald with hornblende ring, simple band, serrated bezel" },
+  { f: "ring-teardrop-stack",       c: "ring",     t: "Rose cut emerald with hornblende ring, simple band, serrated bezel" },
+  { f: "cuff-cream",                c: "bracelet", t: "Cream & brown stone cuff" },
+  { f: "pendant-green-cord",        c: "pendant",  t: "Jade pendant, plain bezel" },
+  { f: "ring-garnet-crown-hammered",c: "ring",     t: "Garnet with crown bezel and twisted wire border on hammered band" },
+  { f: "ring-wide-lapis",           c: "ring",     t: "Lapis on hammered band with serrated bezel" },
+  { f: "mala-red-guru",             c: "mala",     t: "Red mala, carved guru bead" },
+  { f: "cuff-green",                c: "bracelet", t: "Green stone cuff, silver dots" },
+  { f: "ring-wide-hammered-green",  c: "ring",     t: "Rose cut emerald with hornblende ring, hammered band, plain bezel" },
+  { f: "ring-bronze-lace",          c: "ring",     t: "Crown bezel, hammered band" },
+  { f: "pendant-lapis",             c: "pendant",  t: "Lapis pendant, serrated bezel" },
+  { f: "pendant-simple",            c: "pendant",  t: "Lapis pendant, back detail" },
+  { f: "ring-green-crown-faceted",  c: "ring",     t: "Rose cut emerald with hornblende ring, simple band, crown bezel, twisted wire border" },
+  { f: "cuff-worn-beaded",          c: "bracelet", t: "Turquoise cuff, twisted wire" },
+  { f: "mala-green",                c: "mala",     t: "Jade, garnet and pyrite beaded necklace with sterling silver and bronze accents" },
+  { f: "ring-red-twisted",          c: "ring",     t: "Rose cut garnet, crown bezel, twisted wire, split double band" },
+  { f: "pendant-dark-cord",         c: "pendant",  t: "Jade pendant" },
+  { f: "ring-black-faceted",        c: "ring",     t: "Rose cut garnet, crown bezel, twisted wire, split double band" },
+  { f: "cuff-dark-oval",            c: "bracelet", t: "Moss kyanite, double banded cuff, plain bezel" },
+  { f: "ring-green-crown",          c: "ring",     t: "Rose cut emerald with hornblende ring, simple band, crown bezel, twisted wire border" },
+  { f: "ring-opal",                 c: "ring",     t: "Lab opal, simple band, silver stacking ring" },
+  { f: "bracelet-red-beaded",       c: "bracelet", t: "Coral mala, citrine and gemstone accents" },
+  { f: "mala-red-detail",           c: "mala",     t: "Coral mala, citrine and gemstone accents" },
+  { f: "ring-pair-worn",            c: "ring",     t: "Two rings, worn together" },
+  { f: "ring-garnet-boxed",         c: "ring",     t: "Rose cut garnet, crown bezel, twisted wire, split double band" },
+  { f: "ring-tray",                 c: "ring",     t: "A tray of small stone rings" },
+  { f: "collection",                c: "more",     t: "Pendants & cuffs collection" }
+];
+
+// Extra shots not on the site yet, plus my guesses about which photos are the same piece
+const EXTRA = [
+  { f: "ring-teardrop-worn",         c: "ring", t: "(extra shot)", isNew: true },
+  { f: "ring-green-twisted-2",       c: "ring", t: "(extra shot)", isNew: true },
+  { f: "ring-orange-twisted-side",   c: "ring", t: "(extra shot)", isNew: true },
+  { f: "ring-wide-hammered-blue-2",  c: "ring", t: "(extra shot)", isNew: true },
+  { f: "ring-bronze-lace-worn",      c: "ring", t: "(extra shot)", isNew: true },
+  { f: "ring-green-crown-faceted-2", c: "ring", t: "(extra shot)", isNew: true },
+  { f: "mala-green-2",               c: "mala", t: "(extra shot)", isNew: true }
+];
+const GUESS = {
+  "pendant-stamped-back":       ["pendant-labradorite", "card"],
+  "pendant-simple":             ["pendant-lapis", "card"],
+  "ring-teardrop-stack":        ["ring-teardrop-sawtooth", "card"],
+  "ring-teardrop-worn":         ["ring-teardrop-sawtooth", "tuck"],
+  "ring-green-crown":           ["ring-green-crown-faceted", "tuck"],
+  "ring-green-crown-faceted-2": ["ring-green-crown-faceted", "tuck"],
+  "ring-black-faceted":         ["ring-red-twisted", "card"],
+  "ring-garnet-boxed":          ["ring-red-twisted", "tuck"],
+  "ring-green-twisted-2":       ["ring-green-twisted", "tuck"],
+  "ring-orange-twisted-side":   ["ring-orange-twisted", "card"],
+  "ring-wide-hammered-blue-2":  ["ring-wide-hammered-blue", "tuck"],
+  "ring-bronze-lace-worn":      ["ring-bronze-lace", "tuck"],
+  "mala-green-2":               ["mala-green", "tuck"],
+  "mala-red-detail":            ["mala-red-guru", "tuck"],
+  "bracelet-red-beaded":        ["mala-red-guru", "tuck"]
+};
+const ALL = [...PHOTOS, ...EXTRA];
+const SECTIONS = { pendant: "Pendant", bracelet: "Bracelet", ring: "Ring", mala: "Mala", more: "Collection" };
+const KEY = "tj-photo-review-2";
+let saved = {};
+try { saved = JSON.parse(localStorage.getItem(KEY)) || {}; } catch (e) {}
+const val = (p, k) => {
+  const s = saved[p.f] || {};
+  if (k in s) return s[k];
+  if (k === "c") return p.c;
+  if (k === "same") return (GUESS[p.f] || [""])[0];
+  if (k === "show") return (GUESS[p.f] || ["", "card"])[1];
+  return "";
+};
+const num = f => ALL.findIndex(p => p.f === f) + 1;
+const esc = s => String(s).replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;");
+
+document.getElementById("list").innerHTML = ALL.map((p, i) => {
+  const sameOpts = ['<option value="">— Its own piece —</option>'].concat(ALL.filter(o => o.f !== p.f && !o.isNew).map(o =>
+    `<option value="${o.f}" ${val(p, "same") === o.f ? "selected" : ""}>#${num(o.f)} ${esc(o.t)}</option>`)).join("");
+  return `<div class="row ${GUESS[p.f] ? "suggest" : ""}">
+    <img src="images/${p.f}.jpg" alt="" loading="lazy">
+    <div>
+      <div class="file">#${i + 1} · ${p.f}.jpg${p.isNew ? '<span class="tag new">Not on site yet</span>' : ""}${GUESS[p.f] ? '<span class="tag sug">My guess</span>' : ""}</div>
+      <div class="now">Current caption: <b>${esc(p.t)}</b></div>
+      <label for="d${i}">Description</label>
+      <input id="d${i}" data-f="${p.f}" data-k="t" value="${esc(val(p, "t"))}" placeholder="Leave blank to keep the current caption">
+      <div class="grid2">
+        <div><label for="c${i}">Section</label>
+          <select id="c${i}" data-f="${p.f}" data-k="c">${Object.entries(SECTIONS).map(([k, v]) =>
+            `<option value="${k}" ${val(p, "c") === k ? "selected" : ""}>${v}</option>`).join("")}</select></div>
+        <div><label for="s${i}">Same piece as</label>
+          <select id="s${i}" data-f="${p.f}" data-k="same">${sameOpts}</select></div>
+        <div><label for="h${i}">How to show it</label>
+          <select id="h${i}" data-f="${p.f}" data-k="show">
+            <option value="card" ${val(p, "show") === "card" ? "selected" : ""}>Own card</option>
+            <option value="tuck" ${val(p, "show") === "tuck" ? "selected" : ""}>Tucked inside the main photo</option>
+            <option value="skip" ${val(p, "show") === "skip" ? "selected" : ""}>Don't show this photo</option>
+          </select></div>
+      </div>
+    </div>
+  </div>`;
+}).join("");
+
+function update() {
+  const n = ALL.filter(p => saved[p.f] && Object.keys(saved[p.f]).length).length;
+  document.getElementById("count").textContent = `${n} of ${ALL.length} reviewed`;
+}
+document.getElementById("list").addEventListener("change", save);
+document.getElementById("list").addEventListener("input", save);
+function save(e) {
+  const el = e.target; if (!el.dataset.f) return;
+  saved[el.dataset.f] = { ...(saved[el.dataset.f] || {}), [el.dataset.k]: el.value.trim() };
+  try { localStorage.setItem(KEY, JSON.stringify(saved)); } catch (err) {}
+  update();
+}
+document.getElementById("list").addEventListener("click", e => {
+  if (e.target.tagName !== "IMG") return;
+  document.getElementById("zoomImg").src = e.target.src;
+  document.getElementById("zoom").showModal();
+});
+document.getElementById("zoom").addEventListener("click", e => e.currentTarget.close());
+
+document.getElementById("copy").onclick = async () => {
+  const lines = ALL.map((p, i) => {
+    const t = val(p, "t"), c = val(p, "c"), same = val(p, "same"), show = val(p, "show");
+    const changed = t || c !== p.c || same || show !== "card" || p.isNew;
+    if (!changed) return null;
+    return [`#${i + 1} ${p.f}`, SECTIONS[c], t || "(keep caption)",
+            same ? `same as #${num(same)} ${same}` : "own piece",
+            { card: "own card", tuck: "tucked inside", skip: "don't show" }[show]].join(" | ");
+  }).filter(Boolean);
+  const text = "Photo review (photo | section | description | same piece | how to show):\n" + (lines.join("\n") || "(no changes)");
+  try { await navigator.clipboard.writeText(text); alert("Copied! Paste it into the chat with Claude."); }
+  catch (err) { prompt("Copy this text:", text); }
+};
+update();
+</script>
+</body>
+</html>
