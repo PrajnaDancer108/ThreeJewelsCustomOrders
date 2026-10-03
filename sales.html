@@ -106,6 +106,12 @@
   .item-nums { display: grid; grid-template-columns: 76px 1fr auto; gap: 10px; align-items: end; }
   .line-total { font-weight: 600; padding-bottom: 12px; min-width: 76px; text-align: right; font-variant-numeric: tabular-nums; }
   .rm-item { font: inherit; font-size: .88rem; color: var(--garnet); background: none; border: 0; padding: 4px 0; cursor: pointer; }
+  .inv-pick select { background-color: var(--accent-soft); border-color: transparent; font-weight: 500; }
+  .inv-note { font-size: .85rem; color: var(--muted); margin: -6px 0 12px; }
+  .inv-note .linkbtn, .banner .linkbtn { font: inherit; font-weight: 600; color: var(--accent); background: none; border: 0; padding: 0; cursor: pointer; text-decoration: underline; }
+  .pin-row { display: flex; gap: 8px; margin-top: 8px; }
+  .pin-row input { flex: 1; min-width: 0; background: var(--surface); }
+  .pin-row button { font: inherit; font-weight: 600; border: 0; border-radius: 10px; padding: 0 16px; background: var(--accent); color: var(--accent-ink); cursor: pointer; }
   .add-item { width: 100%; font: inherit; font-weight: 600; color: var(--accent); background: var(--surface); border: 1px dashed var(--accent); border-radius: 12px; padding: 12px; cursor: pointer; }
 
   /* Totals */
@@ -183,6 +189,13 @@
       <form id="form" novalidate>
         <div class="banner" id="setupBanner">Setup isn't finished: add your Apps Script URL near the top of <code>sales.html</code>. Sales won't be saved until you do.</div>
         <div class="banner warn" id="outboxBanner" role="status"></div>
+        <div class="banner" id="pinBanner">
+          <span id="pinMsg">Enter your sales PIN to load your inventory on this phone.</span>
+          <div class="pin-row">
+            <input type="password" id="pinGate" autocomplete="off" autocapitalize="characters" aria-label="Sales PIN">
+            <button type="button" id="pinGo">Load</button>
+          </div>
+        </div>
 
         <div class="inv-meta">
           <span>Invoice <strong id="invNo"></strong></span>
@@ -235,7 +248,7 @@
             <div id="receiptExtras" hidden>
               <div class="field" id="f-pin">
                 <label for="pin">Your receipt PIN</label>
-                <input type="password" id="pin" inputmode="numeric" autocomplete="off">
+                <input type="password" id="pin" autocomplete="off" autocapitalize="characters">
                 <div class="err">Enter your PIN to send receipts.</div>
               </div>
               <p class="check-note" id="pinSaved">Sends from your Gmail once the sale saves. <button type="button" class="linkbtn" id="changePin">Change PIN</button></p>
@@ -247,6 +260,7 @@
 
         <fieldset>
           <legend>Items</legend>
+          <p class="inv-note" id="invNote" hidden></p>
           <div id="items"></div>
           <button type="button" class="add-item" id="addItem">+ Add another item</button>
         </fieldset>
@@ -381,6 +395,10 @@ function addItem(focus) {
   div.className = "item"; div.dataset.id = id;
   div.innerHTML = `
     <div class="item-head"><span>Item</span><button type="button" class="rm-item" data-rm>Remove</button></div>
+    <div class="field inv-pick" data-invfield ${inventory.length ? "" : "hidden"}>
+      <label for="inv${id}">From inventory</label>
+      <select id="inv${id}" data-k="inv">${invOptions("")}</select>
+    </div>
     <div class="row">
       <div class="field">
         <label for="type${id}">Type</label>
@@ -407,6 +425,21 @@ function addItem(focus) {
   syncItemHeads(); recalc();
   if (focus) div.querySelector("select").focus();
 }
+
+// Picking a piece fills in its type, name and price (you can still change them for this sale)
+$("#items").addEventListener("change", e => {
+  const sel = e.target.closest("[data-k=inv]"); if (!sel) return;
+  const el = sel.closest(".item"), it = inventory.find(x => x.id === sel.value);
+  if (!it) return;
+  const type = el.querySelector("[data-k=type]");
+  if (it.type && ![...type.options].some(o => o.value === it.type)) type.add(new Option(it.type));
+  if (it.type) type.value = it.type;
+  el.querySelector("[data-k=desc]").value = it.name;
+  el.querySelector("[data-k=qty]").value = 1;
+  el.querySelector("[data-k=price]").value = it.price ? it.price.toFixed(2) : "";
+  el.querySelector("[data-pricefield]").classList.remove("invalid");
+  refreshPickers(); recalc();
+});
 function syncItemHeads() {
   const items = [...document.querySelectorAll(".item")];
   items.forEach((el, i) => {
@@ -424,7 +457,7 @@ function readItems() {
   return [...document.querySelectorAll(".item")].map(el => {
     const g = k => el.querySelector(`[data-k=${k}]`).value;
     const qty = Math.max(1, Math.round(num(g("qty"))) || 1), price = cents(num(g("price")));
-    return { el, type: g("type"), desc: g("desc").trim(), qty, price, total: cents(qty * price), hasPrice: g("price").trim() !== "" };
+    return { el, itemId: g("inv"), type: g("type"), desc: g("desc").trim(), qty, price, total: cents(qty * price), hasPrice: g("price").trim() !== "" };
   });
 }
 
@@ -466,7 +499,7 @@ $("#form").addEventListener("change", e => {
 });
 
 // Email receipt: ticks itself when you type an email (unless you unticked it).
-// The PIN is asked once per phone and must match RECEIPT_PIN in the Apps Script.
+// The PIN is asked once per phone and must match SALES_PIN in the Apps Script.
 let receiptTouched = false;
 const validEmail = v => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
 function syncReceipt() {
@@ -480,7 +513,67 @@ $("#email").addEventListener("input", () => {
   syncReceipt();
 });
 $("#sendReceipt").addEventListener("change", () => { receiptTouched = true; syncReceipt(); });
-$("#changePin").onclick = () => { store.set("ts-pin", ""); $("#pin").value = ""; syncReceipt(); $("#pin").focus(); };
+$("#changePin").onclick = () => { store.set("ts-pin", ""); $("#pin").value = ""; syncReceipt(); showPinGate(); $("#pin").focus(); };
+
+// Inventory: lives on the Inventory tab of your Sheet. A copy is kept on this phone so the
+// picker still works with no signal. Sold pieces drop out of the list.
+let inventory = store.get("ts-inv", { items: [] }).items;
+const pinNow = () => store.get("ts-pin", "");
+function pendingSold() {
+  // Sales still waiting in the outbox count as sold, even if the Sheet hasn't heard yet
+  return store.get("ts-outbox", []).flatMap(s => { try { return JSON.parse(s.items).map(i => i.itemId); } catch { return []; } }).filter(Boolean);
+}
+function invOptions(selected) {
+  const avail = inventory.filter(it => (it.status === "Available" && !pendingSold().includes(it.id)) || it.id === selected);
+  const taken = new Set([...document.querySelectorAll("[data-k=inv]")].map(s => s.value).filter(v => v && v !== selected));
+  const groups = {};
+  avail.filter(it => !taken.has(it.id)).forEach(it => (groups[it.type || "Other"] = groups[it.type || "Other"] || []).push(it));
+  return `<option value="">Not from inventory</option>` + Object.keys(groups).sort().map(g =>
+    `<optgroup label="${esc(g)}">${groups[g].sort((a, b) => a.name.localeCompare(b.name)).map(it =>
+      `<option value="${esc(it.id)}" ${it.id === selected ? "selected" : ""}>${esc(it.name)}${it.price ? ` · ${money(it.price)}` : ""}</option>`).join("")}</optgroup>`).join("");
+}
+function refreshPickers() {
+  document.querySelectorAll("[data-k=inv]").forEach(sel => { sel.innerHTML = invOptions(sel.value); });
+  document.querySelectorAll("[data-invfield]").forEach(f => f.hidden = !inventory.length);
+}
+function renderInvNote(msg) {
+  const saved = store.get("ts-inv", null), n = inventory.filter(it => it.status === "Available").length;
+  const when = saved && saved.at ? new Date(saved.at).toLocaleString([], { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }) : "";
+  $("#invNote").hidden = !inventory.length && !msg;
+  $("#invNote").innerHTML = msg || `${n} piece${n === 1 ? "" : "s"} available · updated ${esc(when)} · <button type="button" class="linkbtn" id="invRefresh">Refresh</button>`;
+}
+function showPinGate(msg) {
+  $("#pinBanner").style.display = "block";
+  $("#pinMsg").textContent = msg || "Enter your sales PIN to load your inventory on this phone.";
+}
+async function loadInventory() {
+  const pin = pinNow();
+  if (!configured) return;
+  if (!pin) { showPinGate(); return; }
+  $("#pinBanner").style.display = "none";
+  try {
+    const r = await fetch(`${SCRIPT_URL}?view=inventory&pin=${encodeURIComponent(pin)}`);
+    const data = await r.json();
+    if (!data.ok && data.error === "pin") {
+      store.set("ts-pin", ""); syncReceipt();
+      showPinGate("That PIN didn't work. Check SALES_PIN in your Apps Script and try again.");
+      return;
+    }
+    if (!data.ok) throw new Error(data.error || "failed");
+    inventory = data.items;
+    store.set("ts-inv", { items: inventory, at: Date.now() });
+    renderInvNote();
+  } catch (err) {
+    renderInvNote(inventory.length ? `No connection. Using the inventory saved on this phone. <button type="button" class="linkbtn" id="invRefresh">Try again</button>` : "");
+  }
+  refreshPickers();
+}
+$("#pinGo").onclick = () => {
+  const v = $("#pinGate").value.trim(); if (!v) { $("#pinGate").focus(); return; }
+  store.set("ts-pin", v); $("#pinGate").value = ""; syncReceipt(); loadInventory();
+};
+$("#pinGate").addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); $("#pinGo").click(); } });
+document.addEventListener("click", e => { if (e.target.id === "invRefresh") loadInventory(); });
 
 // Remember the last market & payment method so booth entries are quick
 function rememberEvent(v) {
@@ -562,16 +655,16 @@ $("#form").addEventListener("submit", async e => {
     event: f.event.value.trim(),
     channel,
     name: f.name.value.trim(), phone: f.phone.value.trim(), email,
-    items: JSON.stringify(t.items.map(({ type, desc, qty, price, total }) => ({ type, desc, qty, price, total }))),
+    items: JSON.stringify(t.items.map(({ itemId, type, desc, qty, price, total }) => ({ itemId, type, desc, qty, price, total }))),
     subtotal: t.subtotal, discount: t.discount, taxRate: t.taxRate, tax: t.tax, shipping: t.shipping, total: t.total,
     method: t.status === "Unpaid" ? (method || "") : method,
     status: t.status, paid: t.paid, due: t.due,
     notes: f.notes.value.trim(),
     emailReceipt: emailIt ? "1" : "",
-    pin: emailIt ? pin : "",
+    pin,
     website: f.website.value
   };
-  if (emailIt) store.set("ts-pin", pin);
+  if (pin) store.set("ts-pin", pin);
 
   const btn = $("#submitBtn");
   btn.disabled = true; btn.textContent = "Saving…";
@@ -589,6 +682,13 @@ $("#form").addEventListener("submit", async e => {
   store.set("ts-last", { channel, method, event: sale.event, date: today() });
   rememberEvent(sale.event);
   renderOutbox();
+  // Mark sold on this phone right away; the Sheet does the same when the sale arrives
+  const soldIds = t.items.map(it => it.itemId).filter(Boolean);
+  if (soldIds.length) {
+    inventory = inventory.map(it => soldIds.includes(it.id) ? { ...it, status: "Sold" } : it);
+    store.set("ts-inv", { ...store.get("ts-inv", {}), items: inventory });
+    renderInvNote();
+  }
   showReceipt(sale, t, queued);
 });
 
@@ -646,7 +746,9 @@ tick(); setInterval(tick, 30000);
 renderEvents();
 resetForm();
 renderOutbox();
-flushOutbox();
+if (inventory.length) renderInvNote();
+flushOutbox().then(loadInventory);
+window.addEventListener("online", loadInventory);
 </script>
 </body>
 </html>
