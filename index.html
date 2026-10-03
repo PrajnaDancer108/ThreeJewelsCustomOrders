@@ -13,37 +13,26 @@
   const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzkQgzqTlYTVhyl6cQP0UsJOVyMmlqNWW06GBqtp1D4YR0AxLpDucT3bQNUfIwudZvW/exec";
 </script>
 <style>
+  /* Muted jewel tones: emerald (main), amethyst (brand), sapphire (selections), garnet (saves) */
   :root {
-    --bg: #f6f1ea;
-    --surface: #fffdf9;
-    --ink: #2b2420;
-    --muted: #6f625a;
-    --line: #e3d8cc;
-    --accent: #a4532f;        /* terracotta */
+    --bg: #f4f2ee;
+    --surface: #fffefc;
+    --ink: #22252b;
+    --muted: #5e636d;
+    --line: #e0dcd5;
+    --accent: #1f5c52;        /* emerald */
     --accent-ink: #ffffff;
-    --accent-soft: #f3e1d6;
-    --sage: #5f7a68;
-    --sage-soft: #e3ebe4;
+    --accent-soft: #dcebe6;
+    --amethyst: #553a68;
+    --sapphire: #2e4a7d;
+    --sapphire-soft: #e2e8f3;
+    --garnet: #8c2f42;
     --error: #b3261e;
     --radius: 14px;
-    --shadow: 0 1px 2px rgba(43,36,32,.06), 0 6px 20px rgba(43,36,32,.06);
+    --shadow: 0 1px 2px rgba(34,37,43,.05), 0 6px 20px rgba(34,37,43,.06);
   }
-  @media (prefers-color-scheme: dark) {
-    :root {
-      --bg: #1c1816;
-      --surface: #262120;
-      --ink: #f2ebe4;
-      --muted: #b3a69c;
-      --line: #3a332f;
-      --accent: #d9825a;
-      --accent-ink: #1c1816;
-      --accent-soft: #3d2a20;
-      --sage: #9db8a5;
-      --sage-soft: #26302a;
-      --error: #f2b8b5;
-      --shadow: none;
-    }
-  }
+  /* Always light, even when the visitor's phone is in dark mode */
+  :root { color-scheme: light; }
   * { box-sizing: border-box; }
   html { -webkit-text-size-adjust: 100%; }
   body {
@@ -53,8 +42,9 @@
   img { max-width: 100%; display: block; }
   .wrap { max-width: 760px; margin: 0 auto; padding: 0 16px; }
 
+  body::before { content: ""; display: block; height: 5px; background: linear-gradient(90deg, #1f5c52, #2e4a7d, #553a68, #8c2f42); }
   header { padding: 32px 0 16px; text-align: center; }
-  .brand { font-family: "Cormorant Garamond", serif; font-weight: 600; font-size: clamp(1.9rem, 8vw, 2.4rem); line-height: 1.1; margin: 0; letter-spacing: .01em; }
+  .brand { font-family: "Cormorant Garamond", serif; font-weight: 600; font-size: clamp(1.9rem, 8vw, 2.4rem); line-height: 1.1; margin: 0; letter-spacing: .01em; color: var(--amethyst); }
   .tag { color: var(--muted); margin: 8px 0 0; }
   .tag a { color: var(--accent); text-decoration: none; font-weight: 500; }
 
@@ -123,17 +113,37 @@
   }
   .card .heart {
     position: absolute; top: 8px; right: 8px; width: 34px; height: 34px; border-radius: 50%;
-    background: rgba(255,255,255,.9); color: #a4532f; display: grid; place-items: center; font-size: 18px; line-height: 1;
+    background: rgba(255,255,255,.92); color: #8c2f42; display: grid; place-items: center; font-size: 18px; line-height: 1;
     box-shadow: 0 1px 4px rgba(0,0,0,.2);
   }
-  .card.liked { outline: 3px solid var(--accent); outline-offset: -3px; }
-  .card.liked .heart { background: var(--accent); color: #fff; }
+  .card .sold {
+    position: absolute; top: 10px; left: 8px; padding: 3px 9px; border-radius: 999px;
+    background: var(--garnet); color: #fff; font-size: .72rem; font-weight: 600; letter-spacing: .04em; text-transform: uppercase;
+  }
+  .card .sold + .views { top: 36px; }
+  .card.liked { outline: 3px solid var(--garnet); outline-offset: -3px; }
+  .card.liked .heart { background: #8c2f42; color: #fff; }
 
   /* Lightbox */
   dialog { border: 0; padding: 0; background: transparent; max-width: min(92vw, 640px); width: 100%; }
   dialog::backdrop { background: rgba(20,16,14,.85); }
   .lb { background: var(--surface); color: var(--ink); border-radius: var(--radius); overflow: hidden; }
   .lb img { width: 100%; max-height: 70vh; object-fit: contain; background: #111; }
+  .lb-stage { position: relative; background: #111; }
+  .lb-arrow {
+    position: absolute; top: 50%; transform: translateY(-50%); width: 42px; height: 42px; border-radius: 50%;
+    border: 0; background: rgba(255,255,255,.92); color: #222; font-size: 28px; line-height: 1; cursor: pointer;
+    box-shadow: 0 1px 4px rgba(0,0,0,.3);
+  }
+  .lb-arrow.prev { left: 10px; } .lb-arrow.next { right: 10px; }
+  .lb-arrow[hidden] { display: none; }
+  .lb-dots { position: absolute; bottom: 10px; left: 0; right: 0; display: flex; justify-content: center; gap: 6px; }
+  .lb-dots span { width: 8px; height: 8px; border-radius: 50%; background: rgba(255,255,255,.5); }
+  .lb-dots span.on { background: #fff; }
+  .card .views {
+    position: absolute; top: 10px; left: 8px; padding: 3px 8px; border-radius: 999px;
+    background: rgba(0,0,0,.6); color: #fff; font-size: .72rem; font-weight: 500;
+  }
   .lb-foot { display: flex; align-items: center; gap: 10px; padding: 12px 14px; }
   .lb-foot p { margin: 0; flex: 1; font-size: .95rem; }
   .lb-close { position: absolute; top: 10px; right: 10px; width: 38px; height: 38px; border-radius: 50%; border: 0; background: rgba(255,255,255,.92); font-size: 22px; cursor: pointer; color: #222; }
@@ -167,8 +177,8 @@
     font: inherit; font-size: .88rem; border: 1px solid var(--line); background: var(--bg); color: var(--ink);
     padding: 7px 12px; border-radius: 999px; cursor: pointer;
   }
-  .chips button[aria-pressed="true"] { background: var(--sage-soft); border-color: var(--sage); color: var(--ink); }
-  .chips button[aria-pressed="true"]::before { content: "✓ "; color: var(--sage); font-weight: 600; }
+  .chips button[aria-pressed="true"] { background: var(--sapphire-soft); border-color: var(--sapphire); color: var(--ink); }
+  .chips button[aria-pressed="true"]::before { content: "✓ "; color: var(--sapphire); font-weight: 600; }
   .group-title { font-size: .8rem; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin: 12px 0 6px; }
 
   .err { color: var(--error); font-size: .85rem; margin-top: 4px; display: none; }
@@ -185,6 +195,8 @@
 
   .done { text-align: center; padding: 40px 16px; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); display: none; }
   .done .big { font-family: "Cormorant Garamond", serif; font-size: 2rem; margin: 0 0 8px; }
+  .done p { margin: 0 0 8px; }
+  .done a { color: var(--accent); font-weight: 600; word-break: break-word; }
   .done button { margin-top: 18px; border: 1px solid var(--line); background: var(--bg); color: var(--ink); padding: 12px 18px; border-radius: 10px; font: inherit; cursor: pointer; }
   .banner { display:none; background: var(--accent-soft); border-radius: 10px; padding: 10px 12px; font-size: .9rem; margin-bottom: 16px; }
 
@@ -282,8 +294,10 @@
       </form>
 
       <div class="done" id="done" role="status">
-        <p class="big">Thank you! ✦</p>
-        <p>Your request is in. I'll be in touch soon to talk through the details.</p>
+        <p class="big">Thank you for your order! ✦</p>
+        <p id="doneEmail">You should have received an email with your order confirmation.</p>
+        <p>Please email <a href="mailto:ThreeJewelsArtistryCo@gmail.com">ThreeJewelsArtistryCo@gmail.com</a> to get in touch.</p>
+        <p>See more of my work on Instagram: <a href="https://instagram.com/threejewelsartistryco" target="_blank" rel="noopener">@threejewelsartistryco</a></p>
         <button type="button" id="again">Start another request</button>
       </div>
     </section>
@@ -296,7 +310,12 @@
   <dialog id="lightbox" aria-label="Photo">
     <div class="lb" style="position:relative">
       <button class="lb-close" id="lbClose" aria-label="Close">×</button>
-      <img id="lbImg" alt="">
+      <div class="lb-stage">
+        <img id="lbImg" alt="">
+        <button type="button" class="lb-arrow prev" id="lbPrev" aria-label="Previous photo" hidden>‹</button>
+        <button type="button" class="lb-arrow next" id="lbNext" aria-label="Next photo" hidden>›</button>
+        <div class="lb-dots" id="lbDots" aria-hidden="true"></div>
+      </div>
       <div class="lb-foot">
         <p id="lbCap"></p>
         <button class="submit" style="width:auto;padding:10px 16px;font-size:.95rem" id="lbLike">♡ Inspiration</button>
@@ -310,7 +329,15 @@
    - REQUEST_TYPES: the buttons customers choose from
    - ELEMENTS: tap-to-select details, grouped
    - PHOTOS: file (in /images), caption, category
-     Category must match a REQUEST_TYPES filter: ring, pendant, bracelet, mala
+     Add sold: true to show a "Sold" tag on a piece that isn't on your
+     Inventory tab, e.g. { f: "ring-opal", c: "ring", t: "...", sold: true },
+     Category (c) is one of: pendant, bracelet, ring, mala, more
+   - Extra angles of the SAME piece that don't show anything new:
+     add same: "<main photo's file>" and a short label in t, e.g.
+       { f: "ring-opal-side", same: "ring-opal", t: "Side view" },
+     It's tucked inside the main photo's card (tap to flip through).
+     Photos that DO show something new (like a stamped back) should stay
+     as their own line, placed right after the front.
    ============================================================ */
 const REQUEST_TYPES = ["Pendant", "Necklace", "Beaded Necklace", "Earrings", "Bracelet", "Ring", "Mala", "Something else"];
 
@@ -321,41 +348,42 @@ const ELEMENTS = {
 };
 
 const PHOTOS = [
-  { f: "ring-green-twisted",        c: "ring",     t: "Green stone ring, twisted wire border" },
+  { f: "ring-green-twisted",        c: "ring",     t: "Chrysoprase ring, double band and twisted wire border" },
   { f: "cuff-turquoise",            c: "bracelet", t: "Turquoise cuff, twisted wire" },
-  { f: "mala-lapis-pendant",        c: "mala",     t: "Lapis mala with pendant" },
-  { f: "pendant-labradorite",       c: "pendant",  t: "Labradorite pendant, crown bezel" },
-  { f: "ring-pink-twisted",         c: "ring",     t: "Pink stone ring, twisted wire" },
-  { f: "ring-wide-hammered-blue",   c: "ring",     t: "Blue stone on wide hammered band" },
-  { f: "cuff-multicolor",           c: "bracelet", t: "Multicolor stone cuff" },
+  { f: "mala-lapis-pendant",        c: "mala",     t: "Lapis necklace with pendant" },
+  { f: "pendant-labradorite",       c: "pendant",  t: "Labradorite pendant, crown bezel, twisted border" },
+  { f: "pendant-stamped-back",      c: "pendant",  t: "Labradorite pendant, back detail" },
+  { f: "ring-pink-twisted",         c: "ring",     t: "Aurora opal ring, twisted wire, stamped and border embellished band" },
+  { f: "ring-wide-hammered-blue",   c: "ring",     t: "Sea green kyanite on hammered band, serrated bezel" },
+  { f: "cuff-multicolor",           c: "bracelet", t: "Turquoise cuff with plain bezel" },
   { f: "pendant-stamped",           c: "pendant",  t: "Stamped square pendant" },
   { f: "mala-blue-tassel",          c: "mala",     t: "Blue mala with tassel" },
-  { f: "ring-orange-twisted",       c: "ring",     t: "Orange stone ring, twisted wire" },
-  { f: "ring-teardrop-sawtooth",    c: "ring",     t: "Green teardrop, sawtooth bezel" },
-  { f: "ring-teardrop-stack",       c: "ring",     t: "Teardrop ring with stacking band" },
+  { f: "ring-orange-twisted",       c: "ring",     t: "Spiny oyster shell ring, twisted wire, stamped and embellished band" },
+  { f: "ring-teardrop-sawtooth",    c: "ring",     t: "Rose cut emerald with hornblende ring, simple band, serrated bezel" },
+  { f: "ring-teardrop-stack",       c: "ring",     t: "Rose cut emerald with hornblende ring, simple band, serrated bezel" },
   { f: "cuff-cream",                c: "bracelet", t: "Cream & brown stone cuff" },
-  { f: "pendant-green-cord",        c: "pendant",  t: "Green oval pendant on cord" },
-  { f: "ring-garnet-crown-hammered",c: "ring",     t: "Garnet on hammered band" },
-  { f: "ring-wide-lapis",           c: "ring",     t: "Lapis on wide band" },
+  { f: "pendant-green-cord",        c: "pendant",  t: "Jade pendant, plain bezel" },
+  { f: "ring-garnet-crown-hammered",c: "ring",     t: "Garnet with crown bezel and twisted wire border on hammered band" },
+  { f: "ring-wide-lapis",           c: "ring",     t: "Lapis on hammered band with serrated bezel" },
   { f: "mala-red-guru",             c: "mala",     t: "Red mala, carved guru bead" },
   { f: "cuff-green",                c: "bracelet", t: "Green stone cuff, silver dots" },
-  { f: "ring-wide-hammered-green",  c: "ring",     t: "Green stone, wide hammered band" },
-  { f: "ring-bronze-lace",          c: "ring",     t: "Bronze stone, lace bezel" },
-  { f: "pendant-lapis",             c: "pendant",  t: "Round lapis pendant" },
-  { f: "ring-green-crown-faceted",  c: "ring",     t: "Faceted green stone, crown bezel" },
-  { f: "cuff-worn-beaded",          c: "bracelet", t: "Turquoise cuff with beaded bracelet" },
-  { f: "mala-green",                c: "mala",     t: "Green & red bead mala" },
-  { f: "ring-red-twisted",          c: "ring",     t: "Red stone ring, twisted wire" },
-  { f: "pendant-dark-cord",         c: "pendant",  t: "Dark oval pendant on cord" },
-  { f: "ring-black-faceted",        c: "ring",     t: "Faceted black stone, double band" },
-  { f: "cuff-dark-oval",            c: "bracelet", t: "Sparkling dark stone cuff" },
-  { f: "ring-green-crown",          c: "ring",     t: "Green cabochon, crown bezel" },
-  { f: "ring-opal",                 c: "ring",     t: "Opal ring, double band" },
-  { f: "bracelet-red-beaded",       c: "bracelet", t: "Red beaded bracelet" },
-  { f: "mala-red-detail",           c: "mala",     t: "Red mala bead detail" },
+  { f: "ring-wide-hammered-green",  c: "ring",     t: "Rose cut emerald with hornblende ring, hammered band, plain bezel" },
+  { f: "ring-bronze-lace",          c: "ring",     t: "Crown bezel, hammered band" },
+  { f: "pendant-lapis",             c: "pendant",  t: "Lapis pendant, serrated bezel" },
+  { f: "pendant-simple",            c: "pendant",  t: "Lapis pendant, back detail" },
+  { f: "ring-green-crown-faceted",  c: "ring",     t: "Rose cut emerald with hornblende ring, simple band, crown bezel, twisted wire border" },
+  { f: "cuff-worn-beaded",          c: "bracelet", t: "Turquoise cuff, twisted wire" },
+  { f: "mala-green",                c: "mala",     t: "Jade, garnet and pyrite beaded necklace with sterling silver and bronze accents" },
+  { f: "ring-red-twisted",          c: "ring",     t: "Rose cut garnet, crown bezel, twisted wire, split double band" },
+  { f: "pendant-dark-cord",         c: "pendant",  t: "Jade pendant" },
+  { f: "ring-black-faceted",        c: "ring",     t: "Rose cut garnet, crown bezel, twisted wire, split double band" },
+  { f: "cuff-dark-oval",            c: "bracelet", t: "Moss kyanite, double banded cuff, plain bezel" },
+  { f: "ring-green-crown",          c: "ring",     t: "Rose cut emerald with hornblende ring, simple band, crown bezel, twisted wire border" },
+  { f: "ring-opal",                 c: "ring",     t: "Lab opal, simple band, silver stacking ring" },
+  { f: "bracelet-red-beaded",       c: "bracelet", t: "Coral mala, citrine and gemstone accents" },
+  { f: "mala-red-detail",           c: "mala",     t: "Coral mala, citrine and gemstone accents" },
   { f: "ring-pair-worn",            c: "ring",     t: "Two rings, worn together" },
-  { f: "pendant-simple",            c: "pendant",  t: "Simple silver disc pendant" },
-  { f: "ring-garnet-boxed",         c: "ring",     t: "Garnet ring, twisted wire" },
+  { f: "ring-garnet-boxed",         c: "ring",     t: "Rose cut garnet, crown bezel, twisted wire, split double band" },
   { f: "ring-tray",                 c: "ring",     t: "A tray of small stone rings" },
   { f: "collection",                c: "more",     t: "Pendants & cuffs collection" }
 ];
@@ -367,6 +395,9 @@ const GROUPS = [["pendant","Pendants"],["bracelet","Bracelets"],["ring","Rings"]
 /* ============================================================ */
 const $ = s => document.querySelector(s);
 const liked = new Set();
+let sold = new Set(); // photo names marked Sold on the Inventory tab of your Sheet
+// Sold if the Inventory tab says so, or if the photo line has sold: true (pieces sold before the inventory existed)
+const isSold = p => !!p.sold || sold.has(p.f);
 let current = "all", lbIndex = -1;
 
 // Filters
@@ -379,16 +410,24 @@ $("#filters").addEventListener("click", e => {
   renderGrid();
 });
 
+// Extra angles (entries with `same`) are grouped under their main photo
+const ANGLES = {};
+PHOTOS.forEach(p => { if (p.same) (ANGLES[p.same] = ANGLES[p.same] || []).push(p); });
+const views = i => [PHOTOS[i], ...(ANGLES[PHOTOS[i].f] || [])];
+
 function card(p) {
+  const n = views(p.i).length;
   return `
-    <button type="button" class="card ${liked.has(p.i)?'liked':''}" data-i="${p.i}" aria-label="${p.t}">
+    <button type="button" class="card ${liked.has(p.i)?'liked':''}" data-i="${p.i}" aria-label="${p.t}${isSold(p)?', sold':''}${n>1?`, ${n} photos`:''}">
       <img src="images/${p.f}.jpg" alt="${p.t}" loading="lazy" decoding="async">
+      ${isSold(p) ? `<span class="sold">Sold</span>` : ""}
+      ${n > 1 ? `<span class="views" aria-hidden="true">${n} photos</span>` : ""}
       <span class="heart" data-heart aria-hidden="true">${liked.has(p.i)?'♥':'♡'}</span>
       <span class="cap">${p.t}</span>
     </button>`;
 }
 function renderGrid() {
-  const all = PHOTOS.map((p,i) => ({...p,i}));
+  const all = PHOTOS.map((p,i) => ({...p,i})).filter(p => !p.same);
   const groups = current === "all" ? GROUPS : GROUPS.filter(([k]) => k === current);
   $("#grid").innerHTML = groups.map(([k, label]) => {
     const items = all.filter(p => p.c === k);
@@ -452,7 +491,28 @@ window.addEventListener("popstate", () => showTab(location.hash === "#gallery" ?
 
 // Lightbox
 const lb = $("#lightbox");
-function openLb(i) { lbIndex = i; $("#lbImg").src = `images/${PHOTOS[i].f}.jpg`; $("#lbImg").alt = PHOTOS[i].t; $("#lbCap").textContent = PHOTOS[i].t; syncLbBtn(); lb.showModal(); }
+let lbView = 0;
+function openLb(i) { lbIndex = i; lbView = 0; showView(); syncLbBtn(); lb.showModal(); }
+function showView() {
+  const v = views(lbIndex), cur = v[lbView], main = PHOTOS[lbIndex];
+  $("#lbImg").src = `images/${cur.f}.jpg`;
+  $("#lbImg").alt = lbView ? `${main.t}: ${cur.t}` : main.t;
+  $("#lbCap").textContent = (lbView ? `${main.t} · ${cur.t}` : main.t) + (isSold(main) ? " · Sold" : "");
+  const multi = v.length > 1;
+  $("#lbPrev").hidden = $("#lbNext").hidden = !multi;
+  $("#lbDots").innerHTML = multi ? v.map((_, k) => `<span class="${k===lbView?'on':''}"></span>`).join("") : "";
+}
+function step(d) { const n = views(lbIndex).length; if (n < 2) return; lbView = (lbView + d + n) % n; showView(); }
+$("#lbPrev").onclick = () => step(-1);
+$("#lbNext").onclick = () => step(1);
+lb.addEventListener("keydown", e => { if (e.key === "ArrowLeft") step(-1); if (e.key === "ArrowRight") step(1); });
+let touchX = null;
+$("#lbImg").addEventListener("touchstart", e => { touchX = e.touches[0].clientX; }, { passive: true });
+$("#lbImg").addEventListener("touchend", e => {
+  if (touchX === null) return;
+  const dx = e.changedTouches[0].clientX - touchX; touchX = null;
+  if (Math.abs(dx) > 40) step(dx < 0 ? 1 : -1);
+});
 function syncLbBtn() { if (lbIndex>=0) $("#lbLike").textContent = liked.has(lbIndex) ? "♥ Saved" : "♡ Inspiration"; }
 $("#lbLike").onclick = () => toggleLike(lbIndex);
 $("#lbClose").onclick = () => lb.close();
@@ -511,6 +571,8 @@ $("#form").addEventListener("submit", async e => {
   try {
     if (!configured) throw new Error("not configured");
     await fetch(SCRIPT_URL, { method: "POST", mode: "no-cors", body: data });
+    // Only mention the confirmation email if they gave us an address to send it to
+    $("#doneEmail").hidden = !email;
     f.hidden = true; $("#done").style.display = "block";
     $("#order").scrollIntoView({behavior:"smooth"});
   } catch (err) {
@@ -530,6 +592,10 @@ $("#again").onclick = () => {
 
 renderGrid();
 updateLiked();
+// Sold pieces stay in the gallery as inspiration, with a "Sold" tag
+if (configured) fetch(`${SCRIPT_URL}?view=sold`).then(r => r.json()).then(d => {
+  if (d.ok && d.sold.length) { sold = new Set(d.sold); renderGrid(); }
+}).catch(() => {});
 if (location.hash === "#gallery") showTab("gallery");
 </script>
 </body>
