@@ -107,6 +107,7 @@
   }
   .card img { width: 100%; height: 100%; object-fit: cover; transition: transform .3s; }
   .card:hover img { transform: scale(1.03); }
+  .card .cap .num { font-weight: 700; margin-right: 2px; }
   .card .cap {
     position: absolute; left: 0; right: 0; bottom: 0; padding: 22px 10px 8px;
     background: linear-gradient(transparent, rgba(0,0,0,.65)); color: #fff; font-size: .8rem; text-align: left; line-height: 1.3;
@@ -284,7 +285,7 @@
 
         <div class="field">
           <label for="notes">Tell me about your idea</label>
-          <textarea id="notes" name="notes" placeholder="Stone or color you love, metal, size, who it's for, a date you need it by…"></textarea>
+          <textarea id="notes" name="notes" placeholder="Stone or color you love, metal, size, who it's for, a date you need it by… You can mention photo numbers from the Gallery, like #12."></textarea>
         </div>
 
         <input class="hp" type="text" name="website" tabindex="-1" autocomplete="off" aria-hidden="true">
@@ -385,7 +386,73 @@ const PHOTOS = [
   { f: "ring-pair-worn",            c: "ring",     t: "Two rings, worn together" },
   { f: "ring-garnet-boxed",         c: "ring",     t: "Rose cut garnet, crown bezel, twisted wire, split double band" },
   { f: "ring-tray",                 c: "ring",     t: "A tray of small stone rings" },
-  { f: "collection",                c: "more",     t: "Pendants & cuffs collection" }
+  { f: "collection",                c: "more",     t: "Pendants & cuffs collection" },
+  // Added Oct 3. Captions describe color and style only until the stones are confirmed
+  { f: "ring-small-crown",           c: "ring",     t: "Small dark stone ring, crown bezel, simple band" },
+  { f: "ring-turquoise-small",       c: "ring",     t: "Small blue-green stone ring, split band" },
+  { f: "ring-wide-peach",            c: "ring",     t: "Peach stone on wide hammered band" },
+  { f: "ring-lapis-twisted",         c: "ring",     t: "Deep blue stone ring, twisted wire border, split band" },
+  { f: "ring-blue-crown-stamped",    c: "ring",     t: "Dark blue stone ring, crown bezel, stamped band" },
+  { f: "ring-blue-crown-hammered",   c: "ring",     t: "Blue stone with crown bezel on hammered band" },
+  { f: "ring-wide-darkgreen",        c: "ring",     t: "Dark green stone on wide hammered band" },
+  { f: "ring-blue-round-twisted",    c: "ring",     t: "Blue round stone ring, crown bezel, twisted wire border" },
+  { f: "ring-green-teardrop",        c: "ring",     t: "Green teardrop stone ring, split band" },
+  { f: "ring-amethyst-faceted",      c: "ring",     t: "Faceted purple stone ring, twisted wire border" },
+  { f: "ring-turquoise-triangle",    c: "ring",     t: "Blue-green triangle stone on wide band" },
+  { f: "ring-labradorite-crown",     c: "ring",     t: "Dark gray stone ring, crown bezel" },
+  { f: "ring-blue-small",            c: "ring",     t: "Small blue stone ring, simple band" },
+  { f: "ring-green-oval",            c: "ring",     t: "Green oval stone ring, simple band" },
+  { f: "ring-chevron",               c: "ring",     t: "Silver chevron band" },
+  { f: "ring-amethyst-round",        c: "ring",     t: "Purple round stone ring" },
+  { f: "pendant-lapis-round",        c: "pendant",  t: "Deep blue round stone pendant" },
+  { f: "pendant-lapis-round-2",      c: "pendant",  t: "Deep blue round stone pendant, plain bezel" },
+  { f: "pendant-turquoise-crown",    c: "pendant",  t: "Blue-green stone pendant, crown bezel and twisted wire border" },
+  { f: "pendant-turquoise-oval",     c: "pendant",  t: "Blue-green webbed stone pendant, plain bezel" },
+  { f: "pendant-blue-oval",          c: "pendant",  t: "Dark blue stone pendant, plain bezel" },
+  { f: "pendant-turquoise-small",    c: "pendant",  t: "Small blue-green stone pendant" },
+  { f: "pendant-purple-oval",        c: "pendant",  t: "Purple stone pendant, long oval" },
+  { f: "pendant-blue-crown",         c: "pendant",  t: "Blue stone pendant, crown bezel" },
+  { f: "pendant-kyanite-large",      c: "pendant",  t: "Large blue stone pendant, twisted wire border" },
+  { f: "pendant-labradorite-2",      c: "pendant",  t: "Gray stone pendant, crown bezel, twisted wire border" },
+  { f: "pendant-moonstone",          c: "pendant",  t: "Milky white stone pendant on chain" },
+  { f: "pendant-stamped-2",          c: "pendant",  t: "Stamped square pendant" },
+  { f: "cuff-green-oval",            c: "bracelet", t: "Green stone cuff, plain bezel" },
+  { f: "cuff-purple-oval",           c: "bracelet", t: "Purple stone cuff, plain bezel" },
+  { f: "cuff-lavender-crown",        c: "bracelet", t: "Lavender stone cuff, crown bezel" },
+  { f: "cuff-turquoise-stamped",     c: "bracelet", t: "Blue-green stone cuff, stamped band" },
+  { f: "cuff-teardrop-twisted",      c: "bracelet", t: "Teardrop stone cuff, twisted wire border, stamped band" },
+  { f: "cuff-lapis-round",           c: "bracelet", t: "Deep blue round stone cuff" },
+  { f: "cuff-turquoise-small",       c: "bracelet", t: "Cuff with a small blue-green round stone" },
+  { f: "bangle-silver",              c: "bracelet", t: "Simple silver bangle" },
+  { f: "mala-red-amber",             c: "mala",     t: "Red beaded mala with black tassel" },
+  { f: "mala-turquoise-black",       c: "mala",     t: "Blue-green and black beaded mala with black tassel" },
+  { f: "mala-red-black",             c: "mala",     t: "Red beaded mala, carved guru bead, black tassel" },
+  { f: "mala-lapis-red-tassel",      c: "mala",     t: "Blue beaded mala with red tassel" },
+  { f: "mala-black",                 c: "mala",     t: "Black beaded mala with black tassel" },
+  { f: "mala-lapis-pendant-2",       c: "mala",     t: "Blue beaded necklace with pendant" },
+  // Extra angles: tucked inside the main photo's card
+  { f: "pendant-turquoise-oval-2",   same: "pendant-turquoise-oval",     t: "Another view" },
+  { f: "ring-wide-peach-2",          same: "ring-wide-peach",            t: "Another view" },
+  { f: "ring-lapis-twisted-2",       same: "ring-lapis-twisted",         t: "Another view" },
+  { f: "cuff-green-oval-2",          same: "cuff-green-oval",            t: "Another view" },
+  { f: "ring-blue-crown-hammered-2", same: "ring-blue-crown-hammered",   t: "Another view" },
+  { f: "cuff-lavender-crown-2",      same: "cuff-lavender-crown",        t: "Another view" },
+  { f: "ring-wide-darkgreen-2",      same: "ring-wide-darkgreen",        t: "Another view" },
+  { f: "ring-blue-round-twisted-2",  same: "ring-blue-round-twisted",    t: "Another view" },
+  { f: "ring-amethyst-faceted-2",    same: "ring-amethyst-faceted",      t: "Another view" },
+  { f: "pendant-labradorite-3",      same: "pendant-labradorite-2",      t: "Another view" },
+  { f: "ring-blue-small-2",          same: "ring-blue-small",            t: "Another view" },
+  { f: "pendant-lapis-round-3",      same: "pendant-lapis-round-2",      t: "Another view" },
+  { f: "ring-amethyst-round-2",      same: "ring-amethyst-round",        t: "Another view" },
+  { f: "ring-amethyst-round-3",      same: "ring-amethyst-round",        t: "Another view" },
+  { f: "pendant-moonstone-2",        same: "pendant-moonstone",          t: "Another view" },
+  { f: "ring-teardrop-worn",         same: "ring-teardrop-sawtooth",     t: "Worn" },
+  { f: "ring-green-twisted-2",       same: "ring-green-twisted",         t: "Another view" },
+  { f: "ring-orange-twisted-side",   same: "ring-orange-twisted",        t: "Side view" },
+  { f: "ring-wide-hammered-blue-2",  same: "ring-wide-hammered-blue",    t: "Another view" },
+  { f: "ring-bronze-lace-worn",      same: "ring-bronze-lace",           t: "Worn" },
+  { f: "ring-green-crown-faceted-2", same: "ring-green-crown-faceted",   t: "Another view" },
+  { f: "mala-green-2",               same: "mala-green",                 t: "Another view" }
 ];
 
 const FILTERS = [["all","All"],["pendant","Pendants"],["bracelet","Bracelets"],["ring","Rings"],["mala","Malas"]];
@@ -415,15 +482,21 @@ const ANGLES = {};
 PHOTOS.forEach(p => { if (p.same) (ANGLES[p.same] = ANGLES[p.same] || []).push(p); });
 const views = i => [PHOTOS[i], ...(ANGLES[PHOTOS[i].f] || [])];
 
+// Photo numbers customers can mention in their request. Each piece is numbered by its place in
+// PHOTOS (extra angles don't get a number), so add new photos at the END to keep numbers the same.
+const NUM = {};
+PHOTOS.filter(p => !p.same).forEach((p, k) => { NUM[p.f] = k + 1; });
+const label = p => `#${NUM[p.f]} ${p.t}`;
+
 function card(p) {
   const n = views(p.i).length;
   return `
-    <button type="button" class="card ${liked.has(p.i)?'liked':''}" data-i="${p.i}" aria-label="${p.t}${isSold(p)?', sold':''}${n>1?`, ${n} photos`:''}">
+    <button type="button" class="card ${liked.has(p.i)?'liked':''}" data-i="${p.i}" aria-label="Photo ${NUM[p.f]}: ${p.t}${isSold(p)?', sold':''}${n>1?`, ${n} photos`:''}">
       <img src="images/${p.f}.jpg" alt="${p.t}" loading="lazy" decoding="async">
       ${isSold(p) ? `<span class="sold">Sold</span>` : ""}
       ${n > 1 ? `<span class="views" aria-hidden="true">${n} photos</span>` : ""}
       <span class="heart" data-heart aria-hidden="true">${liked.has(p.i)?'♥':'♡'}</span>
-      <span class="cap">${p.t}</span>
+      <span class="cap"><b class="num">#${NUM[p.f]}</b> ${p.t}</span>
     </button>`;
 }
 function renderGrid() {
@@ -457,7 +530,7 @@ function updateLiked() {
         <figure>
           <img src="images/${PHOTOS[i].f}.jpg" alt="${PHOTOS[i].t}">
           <button type="button" class="rm" data-rm="${i}" aria-label="Remove ${PHOTOS[i].t}">×</button>
-          <figcaption>${PHOTOS[i].t}</figcaption>
+          <figcaption>${label(PHOTOS[i])}</figcaption>
         </figure>`).join("")}</div>
        <button type="button" class="linkbtn" data-go="gallery">+ Add more from the Gallery</button>`
     : `<div class="insp-empty">Seen something you love? <br><button type="button" class="linkbtn" data-go="gallery">Browse the Gallery →</button></div>`;
@@ -497,7 +570,7 @@ function showView() {
   const v = views(lbIndex), cur = v[lbView], main = PHOTOS[lbIndex];
   $("#lbImg").src = `images/${cur.f}.jpg`;
   $("#lbImg").alt = lbView ? `${main.t}: ${cur.t}` : main.t;
-  $("#lbCap").textContent = (lbView ? `${main.t} · ${cur.t}` : main.t) + (isSold(main) ? " · Sold" : "");
+  $("#lbCap").textContent = (lbView ? `${label(main)} · ${cur.t}` : label(main)) + (isSold(main) ? " · Sold" : "");
   const multi = v.length > 1;
   $("#lbPrev").hidden = $("#lbNext").hidden = !multi;
   $("#lbDots").innerHTML = multi ? v.map((_, k) => `<span class="${k===lbView?'on':''}"></span>`).join("") : "";
@@ -562,7 +635,7 @@ $("#form").addEventListener("submit", async e => {
     // Stone is typed in, and it lands in the Elements column as "Stone: ..."
     elements: [...[...document.querySelectorAll("#elements button[aria-pressed=true]")].map(b => b.textContent),
                f.stone.value.trim() && `Stone: ${f.stone.value.trim()}`].filter(Boolean).join(", "),
-    inspiration: [...liked].map(i => PHOTOS[i].t).join("; "),
+    inspiration: [...liked].map(i => label(PHOTOS[i])).join("; "),
     website: f.website.value
   });
 
